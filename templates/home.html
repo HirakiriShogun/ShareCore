@@ -30,6 +30,7 @@
                 <a href="#about">О платформе</a>
                 <a href="#how-it-works">Как это работает</a>
                 <a href="#devices">Устройства</a>
+                <a href="#customer-contracts">Договора с заказчиками</a>
                 <a href="#contacts">Контакты</a>
                 <a href="{{ url_for('public.login') }}" class="btn-login">Вход</a>
             </nav>
@@ -205,6 +206,46 @@
     </section>
 
     <!-- Contacts Section -->
+    <section id="customer-contracts" class="section section-contracts">
+        <div class="container">
+            <div class="section-header">
+                <p class="section-eyebrow">Документы</p>
+                <h2 class="section-title">Договора с заказчиками</h2>
+                <p class="section-description">
+                    Прозрачные условия сотрудничества доступны онлайн — скачайте и изучите договор до подключения
+                    устройства к ShareCore.
+                </p>
+            </div>
+            <div class="contracts-grid">
+                <a class="contract-card" href="{{ url_for('static', filename='documents/ПУБЛИЧНАЯ ОФЕРТА.pdf') }}"
+                    target="_blank" rel="noopener noreferrer">
+                    <div class="contract-card__body">
+                        <span class="contract-card__label">Публичная оферта</span>
+                        <p class="contract-card__text">Закрепляет единые правила оказания услуг ShareCore</p>
+                    </div>
+                    <span class="contract-card__badge">PDF</span>
+                </a>
+                <a class="contract-card" href="{{ url_for('static', filename='documents/Политика безопасности.pdf') }}"
+                    target="_blank" rel="noopener noreferrer">
+                    <div class="contract-card__body">
+                        <span class="contract-card__label">Политика безопасности</span>
+                        <p class="contract-card__text">Требования по защите платежей и инфраструктуры</p>
+                    </div>
+                    <span class="contract-card__badge">PDF</span>
+                </a>
+                <a class="contract-card"
+                    href="{{ url_for('static', filename='documents/Политика обработки персональных данных.pdf') }}"
+                    target="_blank" rel="noopener noreferrer">
+                    <div class="contract-card__body">
+                        <span class="contract-card__label">Политика обработки ПД</span>
+                        <p class="contract-card__text">Регламент работы с персональными данными заказчиков</p>
+                    </div>
+                    <span class="contract-card__badge">PDF</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
     <section id="contacts" class="section section-contacts">
         <div class="container">
             <h2 class="section-title">Контакты и документы</h2>

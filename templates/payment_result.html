@@ -1,118 +1,284 @@
 {% extends "base.html" %}
 {% block title %}Результат оплаты{% endblock %}
 {% block content %}
-<link rel="preload" as="style" href="{{ url_for('static', filename='device/styles.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='device/styles.css') }}">
+<div class="payment-result-layout" role="main">
+    <div class="result-card" aria-live="polite">
+        <div
+            class="status-icon {{ 'status-icon--success' if success else 'status-icon--error' }}"
+            aria-hidden="true">
+            {% if success %}
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            {% else %}
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+            {% endif %}
+        </div>
+        <p class="status-label">{{ "Оплата прошла успешно" if success else "Оплата не завершена" }}</p>
+        <h1 class="result-message">{{ message }}</h1>
 
-<div class="device-page" role="main">
-    <div class="device-bg" aria-hidden="true">
-        <div class="bg-blob bg-blob-a"></div>
-        <div class="bg-blob bg-blob-b"></div>
-        <div class="liquid-overlay"></div>
-        <div class="glass-caustics"></div>
-        <div class="bg-grid"></div>
-    </div>
-
-    <div class="device-container">
-        <div class="device-card">
-            <div class="payment-result-content">
-                {% if success %}
-                <div class="result-icon result-icon-success">
-                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
-                </div>
-                <h1 class="result-title result-title-success">Успешно!</h1>
-                {% else %}
-                <div class="result-icon result-icon-error">
-                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="15" y1="9" x2="9" y2="15"></line>
-                        <line x1="9" y1="9" x2="15" y2="15"></line>
-                    </svg>
-                </div>
-                <h1 class="result-title result-title-error">Ошибка оплаты</h1>
-                {% endif %}
-
-                <p class="result-message">{{ message }}</p>
-
-                {% if device_uid %}
-                <a href="{{ url_for('public.public_device', uid=device_uid) }}" class="btn-pay">
-                    Вернуться к устройству
-                </a>
-                {% else %}
-                <button onclick="window.close()" class="btn-pay">
-                    Закрыть
-                </button>
-                {% endif %}
-            </div>
+        <div class="result-actions">
+            {% if device_uid %}
+            <a href="{{ url_for('public.public_device', uid=device_uid) }}" class="btn-result">
+                Вернуться к устройству
+            </a>
+            {% else %}
+            <button onclick="window.close()" type="button" class="btn-result btn-result--ghost">
+                Закрыть окно
+            </button>
+            {% endif %}
         </div>
     </div>
+
+    <section class="documents-panel" aria-label="Прикрепленные документы">
+        <div class="documents-head">
+            <div>
+                <p class="documents-label">Документы и условия</p>
+                <p class="documents-subtitle">Ознакомьтесь с актуальными версиями перед повторной оплатой.</p>
+            </div>
+        </div>
+        <div class="documents-grid">
+            <a class="doc-button" target="_blank" rel="noopener noreferrer"
+                href="{{ url_for('static', filename='documents/ПУБЛИЧНАЯ ОФЕРТА.pdf') }}">
+                <div class="doc-icon">PDF</div>
+                <div class="doc-text">
+                    <span class="doc-name">Публичная оферта</span>
+                    <span class="doc-desc">Основные условия сервиса ShareCore</span>
+                </div>
+            </a>
+            <a class="doc-button" target="_blank" rel="noopener noreferrer"
+                href="{{ url_for('static', filename='documents/Политика безопасности.pdf') }}">
+                <div class="doc-icon">PDF</div>
+                <div class="doc-text">
+                    <span class="doc-name">Политика безопасности</span>
+                    <span class="doc-desc">Стандарты защиты платежей и данных</span>
+                </div>
+            </a>
+            <a class="doc-button" target="_blank" rel="noopener noreferrer"
+                href="{{ url_for('static', filename='documents/Политика обработки персональных данных.pdf') }}">
+                <div class="doc-icon">PDF</div>
+                <div class="doc-text">
+                    <span class="doc-name">Политика обработки ПД</span>
+                    <span class="doc-desc">Порядок хранения и обработки сведений</span>
+                </div>
+            </a>
+        </div>
+    </section>
 </div>
 
 <style>
-    .payment-result-content {
-        position: relative;
-        z-index: 1;
-        text-align: center;
-        padding: 20px;
+    .payment-result-layout {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
     }
 
-    .result-icon {
-        width: 80px;
-        height: 80px;
-        margin: 0 auto 20px;
-        border-radius: 50%;
+    .result-card {
+        background: linear-gradient(180deg, rgba(18, 23, 34, .92), rgba(10, 14, 23, .92));
+        padding: 32px 24px;
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .result-card::after {
+        content: "";
+        position: absolute;
+        inset: -30% 35%;
+        background: radial-gradient(circle, rgba(59, 167, 255, .25), transparent 70%);
+        opacity: .4;
+        pointer-events: none;
+    }
+
+    .status-icon {
+        width: 72px;
+        height: 72px;
+        margin: 0 auto 18px;
+        border-radius: 24px;
         display: flex;
         align-items: center;
         justify-content: center;
+        border: 1px solid rgba(255, 255, 255, .08);
+        position: relative;
+        z-index: 1;
     }
 
-    .result-icon-success {
-        background: linear-gradient(135deg, rgba(34, 197, 94, .2), rgba(34, 197, 94, .1));
-        border: 2px solid rgba(34, 197, 94, .4);
+    .status-icon svg {
+        stroke: currentColor;
+    }
+
+    .status-icon--success {
         color: #86efac;
+        background: rgba(34, 197, 94, .16);
+        border-color: rgba(134, 239, 172, .4);
+        box-shadow: 0 10px 30px rgba(34, 197, 94, .25);
     }
 
-    .result-icon-error {
-        background: linear-gradient(135deg, rgba(239, 68, 68, .2), rgba(239, 68, 68, .1));
-        border: 2px solid rgba(239, 68, 68, .4);
+    .status-icon--error {
         color: #fecaca;
+        background: rgba(239, 68, 68, .16);
+        border-color: rgba(254, 202, 202, .4);
+        box-shadow: 0 10px 30px rgba(239, 68, 68, .25);
     }
 
-    .result-title {
-        font-size: 28px;
-        font-weight: 800;
-        margin: 0 0 16px;
-        letter-spacing: .2px;
-    }
-
-    .result-title-success {
-        background: linear-gradient(90deg, #86efac, #22c55e);
-        -webkit-background-clip: text;
-        background-clip: text;
-        color: transparent;
-    }
-
-    .result-title-error {
-        background: linear-gradient(90deg, #fecaca, #ef4444);
-        -webkit-background-clip: text;
-        background-clip: text;
-        color: transparent;
+    .status-label {
+        margin: 0;
+        font-size: 15px;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        color: var(--muted);
+        position: relative;
+        z-index: 1;
     }
 
     .result-message {
+        margin: 10px 0 0;
+        font-size: 24px;
+        font-weight: 700;
         color: var(--text);
-        font-size: 16px;
-        line-height: 1.6;
-        margin-bottom: 30px;
+        position: relative;
+        z-index: 1;
+        line-height: 1.4;
     }
 
-    .btn-pay {
-        display: inline-block;
+    .result-actions {
+        margin-top: 28px;
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        position: relative;
+        z-index: 1;
+    }
+
+    .btn-result {
+        min-width: 220px;
+        height: 48px;
+        border-radius: 999px;
+        border: none;
+        font-weight: 600;
+        font-size: 15px;
+        color: #fff;
+        background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        box-shadow: 0 8px 24px rgba(59, 167, 255, .3);
+        cursor: pointer;
         text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 24px;
+        transition: transform .1s ease, box-shadow .2s ease;
+    }
+
+    .btn-result:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 30px rgba(59, 167, 255, .4);
+    }
+
+    .btn-result--ghost {
+        background: transparent;
+        border: 1px solid rgba(59, 167, 255, .35);
+        color: var(--accent);
+        box-shadow: none;
+    }
+
+    .btn-result--ghost:hover {
+        border-color: var(--accent);
+        color: #fff;
+    }
+
+    .documents-panel {
+        background: rgba(15, 23, 42, .9);
+        border-radius: var(--radius);
+        border: 1px solid rgba(255, 255, 255, .05);
+        padding: 24px;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .02);
+    }
+
+    .documents-label {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text);
+    }
+
+    .documents-subtitle {
+        margin: 6px 0 0;
+        font-size: 14px;
+        color: var(--muted);
+    }
+
+    .documents-grid {
+        margin-top: 18px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 14px;
+    }
+
+    .doc-button {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        padding: 16px;
+        border-radius: 14px;
+        background: rgba(18, 26, 46, .85);
+        text-decoration: none;
+        border: 1px solid rgba(59, 167, 255, .2);
+        transition: transform .15s ease, border-color .2s ease, box-shadow .2s ease;
+    }
+
+    .doc-button:hover {
+        transform: translateY(-2px);
+        border-color: rgba(59, 167, 255, .6);
+        box-shadow: 0 10px 24px rgba(59, 167, 255, .2);
+    }
+
+    .doc-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: rgba(59, 167, 255, .15);
+        color: var(--accent);
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgba(59, 167, 255, .4);
+        letter-spacing: .08em;
+        font-size: 12px;
+    }
+
+    .doc-text {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .doc-name {
+        font-weight: 600;
+        color: var(--text);
+        font-size: 15px;
+    }
+
+    .doc-desc {
+        font-size: 13px;
+        color: var(--muted);
+    }
+
+    @media (max-width: 600px) {
+        .result-card {
+            padding: 24px 18px;
+        }
+
+        .btn-result {
+            width: 100%;
+        }
     }
 </style>
-
-<script defer src="{{ url_for('static', filename='device/app.js') }}"></script>
 {% endblock %}

@@ -435,8 +435,8 @@
 
 .agreement-text {
     color: var(--text);
-    font-size: 14px;
-    line-height: 1.5;
+    font-size: 13px;
+    line-height: 1.45;
 }
 
 .agreement-link {
