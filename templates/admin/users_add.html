@@ -3,12 +3,11 @@
 {% block admin_content %}
 <header class="view-header">
     <div>
-        <p class="eyebrow">Создание учётной записи</p>
-        <h1>Добавить администратора</h1>
-        <p>Укажите email, временный пароль и роль. Суперадмины получают полный доступ, локальные админы — только к своим устройствам.</p>
+        <p class="eyebrow">Создание пользователя</p>
+        <h1>Новый администратор</h1>
     </div>
     <div class="view-header__actions">
-        <a class="btn btn-outline" href="{{ url_for('admin.users_page') }}">← Назад к списку</a>
+        <a class="btn btn-outline" href="{{ url_for('admin.users_page') }}">← Список</a>
     </div>
 </header>
 
@@ -27,25 +26,20 @@
     </article>
 
     <article class="admin-card form-card">
-        <h3 class="section-title">Роль и доступы</h3>
+        <h3 class="section-title">Роль</h3>
         <div class="field">
-            <label class="field__label" for="u-role">Роль</label>
+            <label class="field__label" for="u-role">Уровень доступа</label>
             <select class="field__select" id="u-role">
-                <option value="localadmin">localadmin — управляет устройствами своего региона</option>
-                <option value="superadmin">superadmin — полный контроль над платформой</option>
+                <option value="localadmin">localadmin — доступ к своим устройствам</option>
+                <option value="superadmin">superadmin — полный доступ</option>
             </select>
         </div>
-        <ul class="focus-list">
-            <li>Локальный админ видит только свои устройства.</li>
-            <li>Суперадмин может выдавать роли, отключать аккаунты и работать с аналитикой.</li>
-        </ul>
     </article>
 
     <article class="admin-card form-card">
         <h3 class="section-title">Сохранение</h3>
-        <p class="muted">После создания пользователь получит письмо с инструкциями по входу. Не забудьте сообщить временный пароль.</p>
         <div class="form-actions">
-            <a class="link-cancel" href="{{ url_for('admin.dashboard') }}">Отменить</a>
+            <a class="link-cancel" href="{{ url_for('admin.dashboard') }}">Отмена</a>
             <button class="btn btn-primary" id="u-add">Создать</button>
         </div>
         <div id="msg" class="field__label form-message"></div>

@@ -14,18 +14,22 @@
     position: relative;
     z-index: 1;
     display: grid;
-    grid-template-columns: 280px minmax(0, 1fr);
+    grid-template-columns: 240px minmax(0, 1fr);
     min-height: 100vh;
 }
 
 .admin-sidebar {
-    padding: 32px 28px;
+    padding: 24px 20px;
     display: flex;
     flex-direction: column;
-    gap: 28px;
-    background: rgba(7, 10, 18, 0.85);
+    gap: 20px;
+    background: rgba(5, 8, 15, 0.9);
     backdrop-filter: blur(22px);
     border-right: 1px solid rgba(153, 171, 208, .16);
+    position: sticky;
+    top: 0;
+    align-self: start;
+    min-height: 100vh;
 }
 
 .sidebar-brand {
@@ -50,14 +54,14 @@
 .sidebar-nav {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 }
 
 .sidebar-link {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 12px 14px;
+    padding: 10px 12px;
     border-radius: 12px;
     color: var(--text);
     text-decoration: none;
@@ -153,6 +157,7 @@
 .admin-main {
     padding: 32px 40px;
     width: 100%;
+    min-height: 100vh;
 }
 
 .admin-main__inner {
@@ -164,21 +169,21 @@
 .view-header {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    padding: 24px;
-    border-radius: 18px;
-    background: linear-gradient(135deg, rgba(18, 23, 34, 0.92), rgba(12, 16, 28, 0.92));
-    box-shadow: 0 25px 60px rgba(3, 6, 12, 0.55);
+    gap: 12px;
+    padding: 20px;
+    border-radius: 16px;
+    background: rgba(15, 19, 30, 0.9);
+    box-shadow: 0 18px 45px rgba(3, 5, 10, 0.5);
 }
 
 .view-header > div:first-child h1 {
-    margin: 6px 0;
-    font-size: 32px;
+    margin: 4px 0;
+    font-size: 30px;
 }
 
 .view-header__actions {
     display: flex;
-    gap: 12px;
+    gap: 10px;
     flex-wrap: wrap;
 }
 
@@ -288,22 +293,14 @@
     padding: 24px;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 16px;
 }
 
 .filter-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 18px;
-    align-items: flex-end;
-}
-
-.filter-note {
-    font-size: 14px;
-    color: var(--muted);
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+    align-items: center;
 }
 
 .user-grid {
@@ -357,10 +354,24 @@
     }
 
     .admin-sidebar {
-        flex-direction: column;
-        position: sticky;
-        top: 0;
-        z-index: 2;
+        position: static;
+        min-height: auto;
+        flex-direction: row;
+        flex-wrap: wrap;
+        border-right: none;
+        border-bottom: 1px solid rgba(153, 171, 208, .16);
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .sidebar-nav {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .sidebar-link {
+        flex: 0 1 auto;
     }
 }
 
@@ -375,7 +386,16 @@
     }
 
     .admin-sidebar {
-        padding: 24px 18px;
+        padding: 20px 18px;
+        justify-content: center;
+    }
+
+    .sidebar-nav {
+        width: 100%;
+    }
+
+    .sidebar-link {
+        flex: 1 1 calc(50% - 8px);
     }
 }
 
@@ -825,23 +845,23 @@
 }
 
 .chip.is-active {
-    background: linear-gradient(180deg, var(--accent), var(--accent-strong));
-    border-color: transparent
+    background: rgba(var(--accent-rgb), .15);
+    border-color: rgba(var(--accent-rgb), .45);
 }
 
 .chip-sa.is-active {
-    background: linear-gradient(180deg, #a78bfa, #7c3aed);
-    border-color: transparent
+    background: rgba(167, 139, 250, .16);
+    border-color: rgba(167, 139, 250, .4);
 }
 
 .chip-la.is-active {
-    background: linear-gradient(180deg, #60a5fa, #3b82f6);
-    border-color: transparent
+    background: rgba(59, 130, 246, .18);
+    border-color: rgba(59, 130, 246, .4);
 }
 
 .chip-worker.is-active {
-    background: linear-gradient(180deg, #34d399, #10b981);
-    border-color: transparent;
+    background: rgba(16, 185, 129, .18);
+    border-color: rgba(16, 185, 129, .4);
 }
 
 /* Search/filter bar spacing */
@@ -991,6 +1011,14 @@
     display: flex;
     gap: 8px;
     flex-wrap: wrap
+}
+
+.pill {
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    border: 1px solid rgba(153, 171, 208, .25);
+    background: rgba(255, 255, 255, .04);
 }
 
 .pill.role-sa {

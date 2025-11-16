@@ -3,31 +3,26 @@
 {% block admin_content %}
 <header class="view-header">
     <div>
-        <p class="eyebrow">Команда ShareCore</p>
+        <p class="eyebrow">Команда</p>
         <h1>Администраторы</h1>
-        <p>Все роли, их статус и быстрые действия. Используйте поиск и фильтры, чтобы быстро найти нужный аккаунт.</p>
     </div>
     <div class="view-header__actions">
-        <a class="btn btn-primary" href="{{ url_for('admin.users_new_page') }}">+ Создать пользователя</a>
+        <a class="btn btn-primary" href="{{ url_for('admin.users_new_page') }}">+ Новый пользователь</a>
     </div>
 </header>
 
 <section class="filters-card admin-card searchbar">
     <div class="filter-row">
         <div class="field">
-            <label class="field__label" for="search">Поиск по email</label>
-            <input id="search" type="search" class="field__input search-input" placeholder="start typing..." autocomplete="off">
+            <label class="field__label" for="search">Email</label>
+            <input id="search" type="search" class="field__input search-input" placeholder="Введите email" autocomplete="off">
         </div>
-        <div class="filter-note">
-            <p>Введите первые символы email, чтобы отфильтровать список.</p>
-            <span class="muted">Например: `sales@` или `moscow`.</span>
+        <div class="chips role-chips" id="role-chips" role="tablist" aria-label="Роль">
+            <button class="chip is-active" data-role="all">Все</button>
+            <button class="chip chip-sa" data-role="superadmin">Superadmin</button>
+            <button class="chip chip-la" data-role="localadmin">Localadmin</button>
+            <button class="chip chip-worker" data-role="worker">Worker</button>
         </div>
-    </div>
-    <div class="chips role-chips" id="role-chips" role="tablist" aria-label="Фильтр ролей">
-        <button class="chip is-active" data-role="all">Все роли</button>
-        <button class="chip chip-sa" data-role="superadmin">superadmin</button>
-        <button class="chip chip-la" data-role="localadmin">localadmin</button>
-        <button class="chip chip-worker" data-role="worker">worker</button>
     </div>
 </section>
 
