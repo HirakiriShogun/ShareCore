@@ -189,6 +189,26 @@
         .footer-sep {
             opacity: .25;
         }
+
+        .footer-link {
+            color: var(--text);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .footer-link:hover {
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+
+        .tg-icon {
+            width: 14px;
+            height: 14px;
+            display: inline-block;
+            background: url("data:image/svg+xml,%3Csvg width='14' height='14' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M21.4 4.2L2.9 11.5c-.8.3-.8 1.4 0 1.6l4.6 1.4 1.8 5.6c.2.7 1.1.9 1.6.4l2.6-2.5 4.5 3.3c.6.4 1.4.1 1.6-.6l2.7-15.5c.2-.8-.6-1.4-1.5-1.1z' fill='%234CC9F0'/%3E%3C/svg%3E") no-repeat center/contain;
+        }
     </style>
     <meta name="selfwork.ru" content="aiut3bv8G58dhkP3HOGZqz7gHgVCfh8hDa4Vn6XQPVRG9nj7ZF" />
 </head>
@@ -200,11 +220,20 @@
     <div class="site-footer" role="contentinfo" aria-label="Реквизиты">
         <div class="footer-inner">
             <span class="footer-dot"></span>
-            <span>ИНН: <strong>590418374066</strong></span>
-            <span class="footer-sep">·</span>
-            <span>ShareCore © {{ (now().year) if false else '' }}</span>
-            <span class="footer-sep">·</span>
-            <span>С любовью из Екатеринбурга</span>
+            <span>INN: <strong>590418374066</strong></span>
+            <span class="footer-sep">&middot;</span>
+            <span>ShareCore &copy; {{ now().year if now else '' }}</span>
+            <span class="footer-sep">&middot;</span>
+            <span>AI & admin services</span>
+            <span class="footer-sep">&middot;</span>
+            <span>Development: Vladimir Lekomtsev</span>
+            <span class="footer-sep">&middot;</span>
+            <a class="footer-link" href="tel:+79826447411">+7&nbsp;982&nbsp;644&nbsp;74&nbsp;11</a>
+            <span class="footer-sep">&middot;</span>
+            <a class="footer-link" href="https://t.me/hirakiri_shogun" target="_blank" rel="noopener">
+                <span class="tg-icon" aria-hidden="true"></span>
+                @hirakiri_shogun
+            </a>
         </div>
     </div>
 </body>
