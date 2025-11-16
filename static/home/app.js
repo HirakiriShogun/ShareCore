@@ -48,20 +48,18 @@
         const isOnline = device.online;
         const isBusy = device.busy && device.remaining_seconds > 0;
         
-        let statusClass, statusText, statusIcon;
+        let statusClass;
+        let statusText;
         
         if (!isOnline) {
             statusClass = 'status-offline';
-            statusText = 'Оффлайн';
-            statusIcon = '⚫';
+            statusText = 'Офлайн';
         } else if (isBusy) {
             statusClass = 'status-busy';
-            statusText = `Занято · ${formatTime(device.remaining_seconds)}`;
-            statusIcon = '🟡';
+            statusText = `Активно ещё ${formatTime(device.remaining_seconds)}`;
         } else {
             statusClass = 'status-online';
             statusText = 'Свободно';
-            statusIcon = '🟢';
         }
 
         const pricePerMin = formatPrice(device.price_per_minute);
@@ -80,13 +78,13 @@
                 </div>
                 
                 <div class="device-price">
-                    Тариф: <strong>${pricePerMin} ₽</strong>/мин
+                    Стоимость: <strong>${pricePerMin} ₽</strong>/мин
                 </div>
                 
                 <div class="device-info">
                     ${device.allowed_minutes && device.allowed_minutes.length > 0 ? `
                         <div style="color: var(--muted); font-size: 0.9rem;">
-                            Доступно: ${device.allowed_minutes.join(', ')} минут
+                            Доступные пакеты: ${device.allowed_minutes.join(', ')} мин
                         </div>
                     ` : ''}
                 </div>
@@ -94,7 +92,7 @@
                 <div class="device-link">
                     ${isOnline ? `
                         <a href="${deviceUrl}" class="btn ${isBusy ? 'btn-secondary' : 'btn-primary'}" ${isBusy ? 'style="pointer-events: none; opacity: 0.6;"' : ''}>
-                            ${isBusy ? 'Устройство занято' : 'Получить доступ'}
+                            ${isBusy ? 'Устройство занято' : 'Перейти к устройству'}
                         </a>
                     ` : `
                         <button class="btn btn-secondary" disabled style="opacity: 0.5;">
@@ -154,7 +152,7 @@
             devicesLoading.style.display = 'none';
             devicesEmpty.style.display = 'block';
             devicesEmpty.querySelector('p').textContent = 
-                'Не удалось загрузить устройства. Попробуйте обновить страницу.';
+                'Не удалось загрузить устройства. Пожалуйста, обновите страницу.';
         }
     }
 
@@ -215,6 +213,48 @@
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && headerNav.classList.contains('active')) {
                 closeMobileMenu();
+            }
+        });
+    }
+
+    // Contact modal
+    const contactModal = document.getElementById('contact-modal');
+    const modalCloseBtn = document.getElementById('modal-close');
+    const modalTriggers = document.querySelectorAll('.open-modal');
+
+    if (contactModal) {
+        const openContactModal = () => {
+            contactModal.classList.add('is-open');
+            contactModal.setAttribute('aria-hidden', 'false');
+            document.body.style.overflow = 'hidden';
+        };
+
+        const closeContactModal = () => {
+            contactModal.classList.remove('is-open');
+            contactModal.setAttribute('aria-hidden', 'true');
+            document.body.style.overflow = '';
+        };
+
+        modalTriggers.forEach(trigger => {
+            trigger.addEventListener('click', (event) => {
+                event.preventDefault();
+                openContactModal();
+            });
+        });
+
+        if (modalCloseBtn) {
+            modalCloseBtn.addEventListener('click', closeContactModal);
+        }
+
+        contactModal.addEventListener('click', (event) => {
+            if (event.target === contactModal) {
+                closeContactModal();
+            }
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && contactModal.classList.contains('is-open')) {
+                closeContactModal();
             }
         });
     }
