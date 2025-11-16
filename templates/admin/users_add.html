@@ -1,45 +1,56 @@
 {% extends "admin/layout.html" %}
-{% block title %}Добавить пользователя{% endblock %}
+{% block title %}Новый администратор{% endblock %}
 {% block admin_content %}
-<div class="admin-toolbar">
-  <a class="btn small" href="{{ url_for('admin.dashboard') }}">Назад</a>
-</div>
-<h2 class="section-title">Новый пользователь</h2>
-<div class="grid cols-2">
-  <section class="admin-card form-card">
-    <div class="field">
-      <label class="field__label" for="u-email">Email</label>
-      <input class="field__input" id="u-email" placeholder="Введите email" autocomplete="off">
+<header class="view-header">
+    <div>
+        <p class="eyebrow">Создание учётной записи</p>
+        <h1>Добавить администратора</h1>
+        <p>Укажите email, временный пароль и роль. Суперадмины получают полный доступ, локальные админы — только к своим устройствам.</p>
     </div>
-    <div class="field with-icon">
-      <label class="field__label" for="u-pass">Пароль</label>
-      <input class="field__input" id="u-pass" type="password" placeholder="Введите пароль" autocomplete="new-password">
-      <button class="eye-toggle" type="button" aria-label="Показать пароль" title="Показать/скрыть"
-        id="u-eye">👁</button>
+    <div class="view-header__actions">
+        <a class="btn btn-outline" href="{{ url_for('admin.users_page') }}">← Назад к списку</a>
     </div>
-  </section>
+</header>
 
-  <section class="admin-card form-card">
-    <div class="field">
-      <label class="field__label" for="u-role">Роль</label>
-      <select class="field__select" id="u-role">
-        <option value="localadmin">localadmin</option>
-        <option value="superadmin">superadmin</option>
-      </select>
-    </div>
-    <div class="field__label" style="margin-top:6px;">
-      Подсказки: localadmin — владелец точки; superadmin — полный доступ;
-    </div>
-  </section>
+<section class="form-grid">
+    <article class="admin-card form-card">
+        <h3 class="section-title">Данные учётной записи</h3>
+        <div class="field">
+            <label class="field__label" for="u-email">Email</label>
+            <input class="field__input" id="u-email" placeholder="email@example.com" autocomplete="off">
+        </div>
+        <div class="field with-icon">
+            <label class="field__label" for="u-pass">Временный пароль</label>
+            <input class="field__input" id="u-pass" type="password" placeholder="********" autocomplete="new-password">
+            <button class="eye-toggle" type="button" aria-label="Показать пароль" id="u-eye">👁</button>
+        </div>
+    </article>
 
-  <section class="admin-card form-card">
-    <div class="grid" style="grid-template-columns: auto auto; justify-content:flex-end; align-items:center; gap:12px;">
-      <a class="link-cancel" href="{{ url_for('admin.dashboard') }}">Отмена</a>
-      <button class="btn small" id="u-add">Создать</button>
-    </div>
-    <div id="msg" class="field__label" style="margin-top:8px;"></div>
-  </section>
-</div>
+    <article class="admin-card form-card">
+        <h3 class="section-title">Роль и доступы</h3>
+        <div class="field">
+            <label class="field__label" for="u-role">Роль</label>
+            <select class="field__select" id="u-role">
+                <option value="localadmin">localadmin — управляет устройствами своего региона</option>
+                <option value="superadmin">superadmin — полный контроль над платформой</option>
+            </select>
+        </div>
+        <ul class="focus-list">
+            <li>Локальный админ видит только свои устройства.</li>
+            <li>Суперадмин может выдавать роли, отключать аккаунты и работать с аналитикой.</li>
+        </ul>
+    </article>
+
+    <article class="admin-card form-card">
+        <h3 class="section-title">Сохранение</h3>
+        <p class="muted">После создания пользователь получит письмо с инструкциями по входу. Не забудьте сообщить временный пароль.</p>
+        <div class="form-actions">
+            <a class="link-cancel" href="{{ url_for('admin.dashboard') }}">Отменить</a>
+            <button class="btn btn-primary" id="u-add">Создать</button>
+        </div>
+        <div id="msg" class="field__label form-message"></div>
+    </article>
+</section>
 {% endblock %}
 {% block admin_scripts %}
 <script defer src="{{ url_for('static', filename='admin/users_add.js') }}"></script>

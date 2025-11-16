@@ -2,6 +2,14 @@
 {% block content %}
 <link rel="preload" as="style" href="{{ url_for('static', filename='admin/styles.css') }}">
 <link rel="stylesheet" href="{{ url_for('static', filename='admin/styles.css') }}">
+<style>
+    .mobile-frame {
+        max-width: 100%;
+        padding: 0;
+    }
+</style>
+
+{% set current = request.endpoint or '' %}
 
 <div class="admin-page">
     <div class="admin-bg" aria-hidden="true">
@@ -12,15 +20,45 @@
         <div class="bg-grid"></div>
     </div>
 
-    <header class="admin-header">
-        <div class="brand-title">Панель суперадмина</div>
-    </header>
+    <div class="admin-shell">
+        <aside class="admin-sidebar" aria-label="Навигация">
+            <div class="sidebar-brand">
+                <div class="brand-mark">ShareCore</div>
+                <div class="brand-pill">Super Admin</div>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="{{ url_for('admin.dashboard') }}" class="sidebar-link {{ 'is-active' if current == 'admin.dashboard' else '' }}">
+                    <span class="nav-icon nav-icon--dashboard"></span>
+                    Обзор
+                </a>
+                <a href="{{ url_for('admin.users_page') }}" class="sidebar-link {{ 'is-active' if current == 'admin.users_page' else '' }}">
+                    <span class="nav-icon nav-icon--team"></span>
+                    Администраторы
+                </a>
+                <a href="{{ url_for('admin.users_new_page') }}" class="sidebar-link {{ 'is-active' if current == 'admin.users_new_page' else '' }}">
+                    <span class="nav-icon nav-icon--plus"></span>
+                    Новый админ
+                </a>
+                <a href="{{ url_for('admin.analytics_page') }}" class="sidebar-link {{ 'is-active' if current == 'admin.analytics_page' else '' }}">
+                    <span class="nav-icon nav-icon--analytics"></span>
+                    Аналитика
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <a class="btn btn-outline btn-wide" href="{{ url_for('public.root_redirect') }}" target="_blank" rel="noopener">
+                    Открыть сайт
+                </a>
+                <a class="btn btn-danger btn-wide" href="{{ url_for('public.logout') }}">Выйти</a>
+                <p class="sidebar-hint">Панель суперадмина · версия 2.0</p>
+            </div>
+        </aside>
 
-    <main class="admin-container">
-        <section class="admin-card">
-            {% block admin_content %}{% endblock %}
-        </section>
-    </main>
+        <main class="admin-main" role="main">
+            <div class="admin-main__inner">
+                {% block admin_content %}{% endblock %}
+            </div>
+        </main>
+    </div>
 </div>
 
 <script defer src="{{ url_for('static', filename='admin/app.js') }}"></script>

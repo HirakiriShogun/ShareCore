@@ -3,31 +3,26 @@
     const api = (u, opt = {}) => fetch(u, { headers: { 'Content-Type': 'application/json' }, ...opt });
     let allUsers = [];
 
-    function pill(text, type) {
-        const styles = {
-            on: 'background: rgba(34,197,94,.14); color:#86efac; border:1px solid rgba(34,197,94,.35);',
-            off: 'background: rgba(239,68,68,.14); color:#fecaca; border:1px solid rgba(239,68,68,.35);',
-            role: 'background: rgba(59,130,246,.14); color:#bfdbfe; border:1px solid rgba(59,130,246,.35);'
-        };
-        const style = type === 'on' ? styles.on : type === 'off' ? styles.off : styles.role;
-        return `<span class="pill" style="${style} padding:6px 10px; border-radius:999px; font-size:12px;">${text}</span>`;
-    }
-
     function cardHtml(u) {
-        const statePill = `<span class="pill ${u.is_enabled ? 'on' : 'off'}" style="padding:6px 10px; border-radius:999px; font-size:12px;">${u.is_enabled ? 'Включён' : 'Выключен'}</span>`;
         const roleClass = u.role === 'superadmin' ? 'role-sa' : u.role === 'localadmin' ? 'role-la' : 'role-worker';
-        const rolePill = `<span class="pill ${roleClass}" style="padding:6px 10px; border-radius:999px; font-size:12px;">${u.role}</span>`;
-        const toggleLabel = u.is_enabled ? 'Выключить' : 'Включить';
+        const rolePill = `<span class="pill ${roleClass}">${u.role}</span>`;
+        const statePill = `<span class="pill ${u.is_enabled ? 'on' : 'off'}">${u.is_enabled ? 'Активен' : 'Выключен'}</span>`;
+        const toggleLabel = u.is_enabled ? 'Отключить' : 'Включить';
         const canImpersonate = (u.role === 'localadmin' && u.is_enabled);
         return `
       <div class="admin-card user-card" data-id="${u.id}">
-        <div class="title" style="text-align:center; background: linear-gradient(90deg, var(--accent-soft), var(--accent)); -webkit-background-clip:text; background-clip:text; color:transparent; text-shadow:0 0 24px rgba(var(--accent-rgb), .2);">${u.email}</div>
-        <div class="pills" style="justify-content:center;">
-          ${rolePill}
-          ${statePill}
+        <div class="user-card__header">
+          <div>
+            <div class="title">${u.email}</div>
+            <div class="user-meta">ID ${u.id}</div>
+          </div>
+          <div class="pills">
+            ${rolePill}
+            ${statePill}
+          </div>
         </div>
         <div class="card-actions">
-          ${canImpersonate ? `<button class="btn small btn-blue" data-act="imp">Зайти как</button>` : ``}
+          ${canImpersonate ? `<button class="btn small btn-blue" data-act="imp">Войти как</button>` : ``}
           ${u.role === 'localadmin' ? `<button class="btn small btn-warn" data-act="toggle">${toggleLabel}</button>` : ``}
           ${u.role !== 'superadmin' ? `<button class="btn small btn-red" data-act="del" style="margin-left:auto">Удалить</button>` : ``}
         </div>
@@ -80,5 +75,3 @@
     }));
     refresh();
 })();
-
-

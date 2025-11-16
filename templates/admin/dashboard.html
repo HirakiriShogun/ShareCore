@@ -1,30 +1,94 @@
 {% extends "admin/layout.html" %}
-{% block title %}Админ{% endblock %}
+{% block title %}Панель суперадмина{% endblock %}
 {% block admin_content %}
-<div class="grid cols-2" style="align-items:start;">
-    <section class="admin-card">
-        <h3 class="section-title" style="font-size:16px;">Пользователи</h3>
-        <div class="grid cols-2">
-            <a class="btn small" href="{{ url_for('admin.users_new_page') }}">Добавить</a>
-            <a class="btn small" id="btn-users-list" href="{{ url_for('admin.users_page') }}">Список <span class="badge"
-                    id="users-count">0</span></a>
-        </div>
-    </section>
+<header class="view-header">
+    <div>
+        <p class="eyebrow">Обзор платформы</p>
+        <h1>Super Admin Console</h1>
+        <p>Следите за командой, аналитикой и состоянием платформы ShareCore в одном окне.</p>
+    </div>
+    <div class="view-header__actions">
+        <a class="btn btn-outline" href="{{ url_for('admin.analytics_page') }}">Аналитика</a>
+        <a class="btn btn-primary" href="{{ url_for('admin.users_new_page') }}">+ Добавить администратора</a>
+    </div>
+    <div class="view-header__actions stacked">
+        <a class="action-chip" href="{{ url_for('admin.users_page') }}">Список администраторов</a>
+        <a class="action-chip" href="{{ url_for('admin.analytics_page') }}#export">Экспорт в Excel</a>
+        <a class="action-chip" href="{{ url_for('public.logout') }}">Выйти из панели</a>
+    </div>
+</header>
 
-    <section class="admin-card">
-        <h3 class="section-title" style="font-size:16px;">Аналитика</h3>
-        <div class="grid">
-            <a class="btn small" href="{{ url_for('admin.analytics_page') }}">Перейти</a>
-        </div>
-    </section>
+<section class="stats-grid">
+    <article class="stat-card">
+        <p class="stat-label">Все администраторы</p>
+        <p class="stat-value" id="users-count">0</p>
+        <p class="stat-hint">Superadmin + localadmin + worker</p>
+    </article>
+    <article class="stat-card">
+        <p class="stat-label">Суперадмины</p>
+        <p class="stat-value" id="count-superadmin">0</p>
+        <p class="stat-hint">Ответственные за всю экосистему</p>
+    </article>
+    <article class="stat-card">
+        <p class="stat-label">Локальные админы</p>
+        <p class="stat-value" id="count-localadmin">0</p>
+        <p class="stat-hint">Управляют отдельными регионами</p>
+    </article>
+    <article class="stat-card">
+        <p class="stat-label">Рабочие аккаунты</p>
+        <p class="stat-value" id="count-worker">0</p>
+        <p class="stat-hint">Работают с устройствами в полях</p>
+    </article>
+    <article class="stat-card muted">
+        <p class="stat-label">Выключенные аккаунты</p>
+        <p class="stat-value" id="count-disabled">0</p>
+        <p class="stat-hint">Нужно решить, активировать ли снова</p>
+    </article>
+</section>
 
-    <section class="admin-card">
-        <h3 class="section-title" style="font-size:16px;">Система</h3>
-        <div class="grid">
-            <a class="btn small danger" href="{{ url_for('public.logout') }}">Выйти</a>
+<section class="quick-grid">
+    <article class="quick-card">
+        <div>
+            <h3>Управление командой</h3>
+            <p>Создавайте новые учётные записи, временно выключайте или импользуйте вход под локальным админом.</p>
         </div>
-    </section>
-</div>
+        <div class="quick-card__actions">
+            <a class="btn ghost" href="{{ url_for('admin.users_page') }}">Все пользователи</a>
+            <a class="btn btn-primary" href="{{ url_for('admin.users_new_page') }}">Добавить</a>
+        </div>
+    </article>
+
+    <article class="quick-card">
+        <div>
+            <h3>Аналитика и экспорт</h3>
+            <p>Собирайте отчёты по устройствам, выгружайте Excel и отслеживайте ключевые показатели по диапазону.</p>
+        </div>
+        <div class="quick-card__actions">
+            <a class="btn ghost" href="{{ url_for('admin.analytics_page') }}#export">Экспорт XLSX</a>
+            <a class="btn btn-primary" href="{{ url_for('admin.analytics_page') }}">Детальная аналитика</a>
+        </div>
+    </article>
+
+    <article class="quick-card">
+        <div>
+            <h3>Системные действия</h3>
+            <p>Быстрый доступ к главному сайту, документации и выходу из панели.</p>
+        </div>
+        <div class="quick-card__actions">
+            <a class="btn ghost" href="{{ url_for('public.root_redirect') }}" target="_blank" rel="noopener">Публичная страница</a>
+            <a class="btn btn-danger" href="{{ url_for('public.logout') }}">Завершить сессию</a>
+        </div>
+    </article>
+</section>
+
+<section class="admin-card announcement">
+    <div>
+        <p class="eyebrow">Совет</p>
+        <h3>Проверяйте роли и активности локальных админов</h3>
+        <p>Если локальные администраторы неактивны более 30 дней, система предложит отключить их доступ, чтобы исключить неиспользуемые аккаунты.</p>
+    </div>
+    <a class="btn ghost" href="{{ url_for('admin.users_page') }}">Перейти к списку</a>
+</section>
 {% endblock %}
 {% block admin_scripts %}
 <script defer src="{{ url_for('static', filename='admin/dashboard.js') }}"></script>

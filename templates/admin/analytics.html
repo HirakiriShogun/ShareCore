@@ -1,54 +1,65 @@
 {% extends "admin/layout.html" %}
 {% block title %}Аналитика{% endblock %}
 {% block admin_content %}
-<div class="admin-toolbar">
-    <a class="btn small" href="{{ url_for('admin.dashboard') }}">Назад</a>
-</div>
+<header class="view-header">
+    <div>
+        <p class="eyebrow">Финансы и устройства</p>
+        <h1>Аналитика</h1>
+        <p>Соберите ключевые показатели по устройствам, выгрузите Excel-отчёт и сравните выручку за выбранный диапазон.</p>
+    </div>
+    <div class="view-header__actions">
+        <a class="btn btn-outline" href="{{ url_for('admin.dashboard') }}">← Панель</a>
+    </div>
+</header>
 
-<!-- Фильтры для экспорта Excel -->
-<div class="admin-card" style="margin-bottom: 16px;">
-    <h3 class="section-title" style="font-size: 16px; margin-bottom: 12px;">Экспорт в Excel</h3>
-    <div class="grid cols-3" style="margin-bottom: 12px;">
+<section class="admin-card export-card" id="export">
+    <div class="export-header">
+        <div>
+            <p class="eyebrow">Экспорт отчёта</p>
+            <h3>Выгрузка в Excel</h3>
+            <p>Укажите даты, чтобы экспортировать только нужный период. Если оставить поля пустыми, выгрузится весь массив.</p>
+        </div>
+    </div>
+    <div class="export-grid">
         <div class="field">
             <label class="field__label" for="export-date-from">Дата с</label>
-            <input type="date" id="export-date-from" class="field__input" />
+            <input type="date" id="export-date-from" class="field__input">
         </div>
         <div class="field">
             <label class="field__label" for="export-date-to">Дата по</label>
-            <input type="date" id="export-date-to" class="field__input" />
+            <input type="date" id="export-date-to" class="field__input">
         </div>
-        <div class="field" style="display: flex; align-items: flex-end;">
-            <button class="btn" id="btn-export" style="width: 100%;">Скачать XLSX</button>
-        </div>
+        <button class="btn btn-primary" id="btn-export" type="button">Скачать XLSX</button>
     </div>
-    <div style="color: var(--muted); font-size: 13px; margin-top: 8px;">
-        💡 Оставьте поля пустыми, чтобы экспортировать все данные. Если указана только дата "с", будут экспортированы все данные с этой даты по текущий момент.
-    </div>
-</div>
-<h2 class="section-title">Сводка</h2>
-<div class="grid cols-3 metrics">
-    <div class="admin-card metric" data-m="orders">
-        <div class="m-icon m-orders" aria-hidden="true"></div>
-        <div class="m-key">Активации</div>
-        <div class="m-val" id="k-orders">—</div>
-    </div>
-    <div class="admin-card metric" data-m="amount">
-        <div class="m-icon m-amount" aria-hidden="true"></div>
-        <div class="m-key">Выручка</div>
-        <div class="m-val money" id="k-amount">—</div>
-    </div>
-    <div class="admin-card metric" data-m="devices">
-        <div class="m-icon m-devices" aria-hidden="true"></div>
-        <div class="m-key">Устройства</div>
-        <div class="m-val" id="k-devs">—</div>
-    </div>
-</div>
+    <p class="muted">Файл скачается с сервера сразу после генерации.</p>
+</section>
 
-<h3 class="section-title" style="font-size:16px;">По устройствам</h3>
-<div class="admin-toolbar" style="justify-content:space-between; align-items:end;">
-    <div class="grid cols-3" style="gap:8px; align-items:end;">
+<section class="stats-grid">
+    <article class="stat-card metric" data-m="orders">
+        <p class="stat-label">Количество заказов</p>
+        <p class="stat-value" id="k-orders">-</p>
+        <p class="stat-hint">В выбранном диапазоне</p>
+    </article>
+    <article class="stat-card metric" data-m="amount">
+        <p class="stat-label">Выручка</p>
+        <p class="stat-value" id="k-amount">-</p>
+        <p class="stat-hint">Сумма оплаченных сессий</p>
+    </article>
+    <article class="stat-card metric" data-m="devices">
+        <p class="stat-label">Активных устройств</p>
+        <p class="stat-value" id="k-devs">-</p>
+        <p class="stat-hint">С учётом фильтра</p>
+    </article>
+</section>
+
+<section class="admin-card table-wrap">
+    <div class="table-toolbar">
+        <div>
+            <p class="eyebrow">Разрез по устройствам</p>
+            <h3>Выберите диапазон</h3>
+        </div>
         <div class="field">
-            <label class="field__label" for="range">Период</label>
+            <label class="field__label" for="range">Диапазон данных</label>
             <select id="range" class="field__select">
                 <option value="day">День</option>
                 <option value="week">Неделя</option>
@@ -56,20 +67,18 @@
             </select>
         </div>
     </div>
-</div>
 
-<div class="admin-card table-wrap">
-    <div class="table" role="table" aria-label="Статистика по устройствам">
+    <div class="table" role="table" aria-label="Аналитика по устройствам">
         <div class="t-head" role="rowgroup">
             <div class="t-row" role="row">
-                <button class="t-cell th" data-sort="name" role="columnheader" aria-sort="none">Название</button>
+                <button class="t-cell th" data-sort="name" role="columnheader" aria-sort="none">Устройство</button>
                 <button class="t-cell th" data-sort="amount" role="columnheader" aria-sort="none">Выручка</button>
-                <button class="t-cell th" data-sort="orders" role="columnheader" aria-sort="none">Кол-во активаций</button>
+                <button class="t-cell th" data-sort="orders" role="columnheader" aria-sort="none">Количество сеансов</button>
             </div>
         </div>
         <div id="bydev" class="t-body" role="rowgroup"></div>
     </div>
-</div>
+</section>
 {% endblock %}
 {% block admin_scripts %}
 <script defer src="{{ url_for('static', filename='admin/analytics.js') }}"></script>
