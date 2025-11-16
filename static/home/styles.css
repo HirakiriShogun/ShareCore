@@ -994,7 +994,7 @@ body {
         z-index: 1000;
         pointer-events: auto !important;
     }
-    
+
     .documents-buttons .btn {
         padding: 16px 20px;
         font-size: 0.9rem;
@@ -1010,16 +1010,17 @@ body {
         user-select: none;
         -webkit-user-select: none;
     }
-    
+
     .contact-item.documents-buttons {
         border-bottom: none !important;
         pointer-events: auto !important;
     }
-    
+
     .contact-item {
         pointer-events: auto;
     }
 }
+
 .section-contracts {
     position: relative;
     z-index: 1;
