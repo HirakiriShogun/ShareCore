@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<link rel="preload" as="style" href="{{ url_for('static', filename='admin/styles.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='admin/styles.css') }}">
+
+<div class="admin-page">
+    <div class="admin-bg" aria-hidden="true">
+        <div class="bg-blob bg-blob-a"></div>
+        <div class="bg-blob bg-blob-b"></div>
+        <div class="liquid-overlay"></div>
+        <div class="glass-caustics"></div>
+        <div class="bg-grid"></div>
+    </div>
+
+    <header class="admin-header">
+        <div class="brand-title">Панель суперадмина</div>
+    </header>
+
+    <main class="admin-container">
+        <section class="admin-card">
+            {% block admin_content %}{% endblock %}
+        </section>
+    </main>
+</div>
+
+<script defer src="{{ url_for('static', filename='admin/app.js') }}"></script>
+{% block admin_scripts %}{% endblock %}
+{% endblock %}

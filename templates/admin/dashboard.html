@@ -1,0 +1,31 @@
+{% extends "admin/layout.html" %}
+{% block title %}Админ{% endblock %}
+{% block admin_content %}
+<div class="grid cols-2" style="align-items:start;">
+    <section class="admin-card">
+        <h3 class="section-title" style="font-size:16px;">Пользователи</h3>
+        <div class="grid cols-2">
+            <a class="btn small" href="{{ url_for('admin.users_new_page') }}">Добавить</a>
+            <a class="btn small" id="btn-users-list" href="{{ url_for('admin.users_page') }}">Список <span class="badge"
+                    id="users-count">0</span></a>
+        </div>
+    </section>
+
+    <section class="admin-card">
+        <h3 class="section-title" style="font-size:16px;">Аналитика</h3>
+        <div class="grid">
+            <a class="btn small" href="{{ url_for('admin.analytics_page') }}">Перейти</a>
+        </div>
+    </section>
+
+    <section class="admin-card">
+        <h3 class="section-title" style="font-size:16px;">Система</h3>
+        <div class="grid">
+            <a class="btn small danger" href="{{ url_for('public.logout') }}">Выйти</a>
+        </div>
+    </section>
+</div>
+{% endblock %}
+{% block admin_scripts %}
+<script defer src="{{ url_for('static', filename='admin/dashboard.js') }}"></script>
+{% endblock %}

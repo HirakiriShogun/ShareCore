@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}{{ device.name }}{% endblock %}
+{% block content %}
+<link rel="preload" as="style" href="{{ url_for('static', filename='device/styles.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='device/styles.css') }}">
+
+<div class="device-page" role="main" data-device-uid="{{ device.device_uid }}"
+    data-device-price="{{ device.price_per_minute|int }}">
+    <div class="device-bg" aria-hidden="true">
+        <div class="bg-blob bg-blob-a"></div>
+        <div class="bg-blob bg-blob-b"></div>
+        <div class="liquid-overlay"></div>
+        <div class="glass-caustics"></div>
+        <div class="bg-grid"></div>
+    </div>
+
+    <div class="device-container">
+        <div class="device-card">
+            <div class="device-header">
+                <div class="title-row">
+                    <div class="status-dot {{ 'on' if device.relay_state else 'off' }}"
+                        aria-label="{{ 'Онлайн' if device.relay_state else 'Оффлайн' }}"></div>
+                    <h1 class="device-name">{{ device.name }}</h1>
+                </div>
+                <div class="device-price">Цена: <b id="ppm-rub"></b> ₽/мин</div>
+            </div>
+
+            <div id="busy-banner" class="busy-banner hidden" role="status">
+                <div class="label">Устройство занято</div>
+                <div class="timer">
+                    <span id="remain-mm">00</span>:<span id="remain-ss">00</span>
+                </div>
+            </div>
+
+            <div id="controls" class="device-controls">
+                <div class="section-label">Выберите время доступа</div>
+                <div class="time-chips" id="chips" role="group" aria-label="Время доступа"></div>
+
+                <div class="total-section">
+                    <span class="total-label">К оплате:</span>
+                    <span class="total-amount"><span id="total">0</span> ₽</span>
+                </div>
+
+                <div class="agreement-section">
+                    <label class="agreement-label">
+                        <input type="checkbox" id="agreement-checkbox-1" class="agreement-checkbox">
+                        <span class="agreement-text">
+                            Я согласен с
+                            <a href="{{ url_for('static', filename='documents/ПОЛЬЗОВАТЕЛЬСКОЕ СОГЛАШЕНИЕ.pdf') }}"
+                                target="_blank" class="agreement-link">пользовательским соглашением</a>
+                            и
+                            <a href="{{ url_for('static', filename='documents/СОГЛАСИЕ НА ОБРАБОТКУ ПЕРСОНАЛЬНЫХ ДАННЫХ.pdf') }}"
+                                target="_blank" class="agreement-link">согласием на обработку персональных данных</a>
+                        </span>
+                    </label>
+
+                    <label class="agreement-label">
+                        <input type="checkbox" id="agreement-checkbox-2" class="agreement-checkbox">
+                        <span class="agreement-text">
+                            Я согласен с
+                            <a href="{{ url_for('static', filename='documents/ПУБЛИЧНАЯ ОФЕРТА.pdf') }}" target="_blank"
+                                class="agreement-link">публичной офертой</a>
+                            и
+                            <a href="{{ url_for('static', filename='documents/Оплата_банковскими_картами.pdf') }}"
+                                target="_blank" class="agreement-link">оплатой банковскими картами</a>
+                        </span>
+                    </label>
+                </div>
+
+                <button id="pay" class="btn-pay" type="button">
+                    <span>Оплатить и начать</span>
+                </button>
+                <div id="msg" class="message-box hidden" role="alert"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script defer src="{{ url_for('static', filename='device/app.js') }}"></script>
+{% endblock %}

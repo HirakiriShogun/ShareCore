@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<link rel="preload" as="style" href="{{ url_for('static', filename='login/styles.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='login/styles.css') }}">
+
+<div class="login-page" role="main">
+    <div class="login-bg" aria-hidden="true">
+        <div class="bg-blob bg-blob-a"></div>
+        <div class="bg-blob bg-blob-b"></div>
+        <div class="liquid-overlay"></div>
+        <div class="glass-caustics"></div>
+        <div class="bg-grid"></div>
+    </div>
+
+    <div class="login-container">
+        <form class="login-card" method="post" novalidate aria-labelledby="login-title">
+            <div class="login-card__header">
+                <h1 id="login-title" class="login-title login-title--brand">Добро пожаловать</h1>
+                <p class="login-subtitle">Войдите, чтобы продолжить</p>
+            </div>
+
+            {% if error %}
+            <div class="alert-error" role="alert">{{ error }}</div>
+            {% endif %}
+
+            <div class="field">
+                <label class="field__label" for="email">Логин</label>
+                <input id="email" class="field__input" type="text" name="email" autocomplete="username" inputmode="email">
+            </div>
+
+            <div class="field">
+                <label class="field__label" for="password">Пароль</label>
+                <input id="password" class="field__input" type="password" name="password"
+                    autocomplete="current-password">
+            </div>
+
+            <button class="btn-primary" type="submit">
+                <span>Войти</span>
+            </button>
+        </form>
+    </div>
+</div>
+
+<script defer src="{{ url_for('static', filename='login/app.js') }}"></script>
+{% endblock %}

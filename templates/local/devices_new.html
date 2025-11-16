@@ -1,0 +1,292 @@
+{% extends "local/layout.html" %}
+{% set header_title = 'Добавить устройство' %}
+{% block title %}Новое устройство{% endblock %}
+{% block local_content %}
+<div class="toolbar">
+    <a class="btn neutral small" href="{{ url_for('local_admin.devices_page') }}">← Назад</a>
+</div>
+
+<h2 class="section-title">Добавить устройство</h2>
+
+<div id="alert" class="message-box hidden"></div>
+
+<form id="device-form">
+    <div class="field">
+        <label class="field__label" for="name">Название устройства</label>
+        <input class="field__input" id="name" type="text" placeholder="Например: Самокат у ТЦ" required>
+    </div>
+
+    <div class="field">
+        <label class="field__label" for="uid">UID устройства</label>
+        <input class="field__input" id="uid" type="text" placeholder="Уникальный идентификатор (SMC-0001)" required>
+    </div>
+
+    <div class="field">
+        <label class="field__label" for="price_rub">Цена за минуту (₽)</label>
+        <input class="field__input" id="price_rub" type="text" inputmode="decimal" placeholder="Например: 8 или 8.50"
+            required>
+    </div>
+
+    <div class="field">
+        <label class="field__label">Доступные варианты времени (минут)</label>
+        <div id="mins" class="time-tags"></div>
+
+        <!-- Быстрые кнопки для популярных значений -->
+        <div class="quick-time-buttons">
+            <button type="button" class="quick-time-btn" data-minutes="5">5 мин</button>
+            <button type="button" class="quick-time-btn" data-minutes="10">10 мин</button>
+            <button type="button" class="quick-time-btn" data-minutes="15">15 мин</button>
+            <button type="button" class="quick-time-btn" data-minutes="30">30 мин</button>
+            <button type="button" class="quick-time-btn" data-minutes="60">1 час</button>
+            <button type="button" class="quick-time-btn" data-minutes="120">2 часа</button>
+        </div>
+
+
+        <div style="font-size: 13px; color: var(--muted); margin-top: 6px;">
+            По умолчанию: 5, 10, 15, 30, 60 минут
+        </div>
+    </div>
+
+    <div class="field">
+        <label class="field__label" for="min-input">Добавить произвольное время (минут)</label>
+        <input class="field__input" id="min-input" type="number" min="1" max="720"
+            placeholder="Введите количество минут (1-720)">
+        <button class="btn small" type="button" id="add-min" style="margin-top: 8px;">Добавить время</button>
+    </div>
+
+    <div class="toolbar" style="justify-content: flex-end; margin-top: 20px;">
+        <button class="btn" type="submit" id="save">Сохранить</button>
+    </div>
+</form>
+
+<style>
+    .time-tags {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        min-height: 50px;
+        padding: 12px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, .02);
+        border: 1px solid rgba(153, 171, 208, .12);
+        margin-bottom: 16px;
+    }
+
+    .time-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 12px;
+        border-radius: 10px;
+        background: linear-gradient(180deg, var(--accent), var(--accent-strong));
+        color: #fff;
+        font-size: 14px;
+        font-weight: 600;
+        box-shadow: 0 2px 8px rgba(var(--accent-rgb), .3);
+    }
+
+    .time-tag .remove {
+        cursor: pointer;
+        opacity: .8;
+        font-weight: 700;
+        transition: opacity .2s;
+        padding: 2px;
+        border-radius: 50%;
+        width: 18px;
+        height: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .time-tag .remove:hover {
+        opacity: 1;
+        background: rgba(255, 255, 255, .2);
+    }
+
+    .quick-time-buttons {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+
+    .quick-time-btn {
+        padding: 10px 12px;
+        border: 1px solid rgba(153, 171, 208, .2);
+        border-radius: 10px;
+        background: rgba(255, 255, 255, .02);
+        color: var(--text);
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all .2s;
+        text-align: center;
+    }
+
+    .quick-time-btn:hover {
+        background: rgba(var(--accent-rgb), .1);
+        border-color: rgba(var(--accent-rgb), .3);
+        color: var(--accent);
+    }
+
+    .quick-time-btn.active {
+        background: linear-gradient(180deg, var(--accent), var(--accent-strong));
+        color: #fff;
+        border-color: var(--accent);
+        box-shadow: 0 2px 8px rgba(var(--accent-rgb), .3);
+    }
+
+    /* Мобильная адаптация */
+    @media (max-width: 640px) {
+        .quick-time-buttons {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+
+        .quick-time-btn {
+            padding: 8px 6px;
+            font-size: 13px;
+        }
+    }
+</style>
+
+<script>
+    const $ = s => document.querySelector(s);
+    const api = (u, opt = {}) => fetch(u, { headers: { 'Content-Type': 'application/json' }, ...opt });
+
+    let allowedMinutes = [];
+
+    function renderMinutes() {
+        const container = $('#mins');
+        if (allowedMinutes.length === 0) {
+            container.innerHTML = '<div style="color: var(--muted); font-size: 13px;">Используются значения по умолчанию</div>';
+            return;
+        }
+        container.innerHTML = allowedMinutes
+            .sort((a, b) => a - b)
+            .map(m => `<span class="time-tag">${m} мин <span class="remove" data-min="${m}">×</span></span>`)
+            .join('');
+
+        container.querySelectorAll('.remove').forEach(el => {
+            el.addEventListener('click', () => {
+                const min = parseInt(el.dataset.min);
+                allowedMinutes = allowedMinutes.filter(x => x !== min);
+                renderMinutes();
+                updateQuickButtons();
+            });
+        });
+    }
+
+    function updateQuickButtons() {
+        document.querySelectorAll('.quick-time-btn').forEach(btn => {
+            const minutes = parseInt(btn.dataset.minutes);
+            if (allowedMinutes.includes(minutes)) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    }
+
+    function addMinutes(minutes) {
+        if (allowedMinutes.includes(minutes)) {
+            showAlert('Это значение уже добавлено', 'error');
+            return;
+        }
+        allowedMinutes.push(minutes);
+        renderMinutes();
+        updateQuickButtons();
+    }
+
+    // Обработчики для быстрых кнопок
+    document.querySelectorAll('.quick-time-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const minutes = parseInt(btn.dataset.minutes);
+            addMinutes(minutes);
+        });
+    });
+
+    $('#add-min').addEventListener('click', () => {
+        const input = $('#min-input');
+        const val = parseInt(input.value);
+        if (!val || val < 1 || val > 720) {
+            showAlert('Введите число от 1 до 720', 'error');
+            return;
+        }
+        addMinutes(val);
+        input.value = '';
+    });
+
+
+    function showAlert(msg, type = 'success') {
+        const alert = $('#alert');
+        alert.textContent = msg;
+        alert.className = `message-box ${type}`;
+        alert.classList.remove('hidden');
+        setTimeout(() => alert.classList.add('hidden'), 5000);
+    }
+
+    $('#device-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const name = $('#name').value.trim();
+        const uid = $('#uid').value.trim();
+        const priceStr = $('#price_rub').value.trim().replace(',', '.');
+        const price = parseFloat(priceStr);
+
+        if (!name || !uid) {
+            showAlert('Заполните все поля', 'error');
+            return;
+        }
+
+        if (isNaN(price) || price < 0) {
+            showAlert('Некорректная цена', 'error');
+            return;
+        }
+
+        const priceKopecks = Math.round(price * 100);
+
+        const saveBtn = $('#save');
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Сохранение...';
+
+        try {
+            const payload = {
+                name,
+                device_uid: uid,
+                price_per_minute: priceKopecks,
+                allowed_minutes: allowedMinutes.length > 0 ? allowedMinutes : null
+            };
+
+            const r = await api('/local/api/devices', {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+
+            const data = await r.json();
+
+            if (!r.ok) {
+                showAlert(data.error || 'Ошибка создания устройства', 'error');
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Сохранить';
+                return;
+            }
+
+            showAlert('Устройство создано успешно!', 'success');
+            setTimeout(() => {
+                window.location.href = '/local/devices';
+            }, 1000);
+        } catch (e) {
+            showAlert('Ошибка сети', 'error');
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Сохранить';
+        }
+    });
+
+    renderMinutes();
+    updateQuickButtons();
+</script>
+{% endblock %}

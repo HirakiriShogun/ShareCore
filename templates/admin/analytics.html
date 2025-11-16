@@ -1,0 +1,76 @@
+{% extends "admin/layout.html" %}
+{% block title %}Аналитика{% endblock %}
+{% block admin_content %}
+<div class="admin-toolbar">
+    <a class="btn small" href="{{ url_for('admin.dashboard') }}">Назад</a>
+</div>
+
+<!-- Фильтры для экспорта Excel -->
+<div class="admin-card" style="margin-bottom: 16px;">
+    <h3 class="section-title" style="font-size: 16px; margin-bottom: 12px;">Экспорт в Excel</h3>
+    <div class="grid cols-3" style="margin-bottom: 12px;">
+        <div class="field">
+            <label class="field__label" for="export-date-from">Дата с</label>
+            <input type="date" id="export-date-from" class="field__input" />
+        </div>
+        <div class="field">
+            <label class="field__label" for="export-date-to">Дата по</label>
+            <input type="date" id="export-date-to" class="field__input" />
+        </div>
+        <div class="field" style="display: flex; align-items: flex-end;">
+            <button class="btn" id="btn-export" style="width: 100%;">Скачать XLSX</button>
+        </div>
+    </div>
+    <div style="color: var(--muted); font-size: 13px; margin-top: 8px;">
+        💡 Оставьте поля пустыми, чтобы экспортировать все данные. Если указана только дата "с", будут экспортированы все данные с этой даты по текущий момент.
+    </div>
+</div>
+<h2 class="section-title">Сводка</h2>
+<div class="grid cols-3 metrics">
+    <div class="admin-card metric" data-m="orders">
+        <div class="m-icon m-orders" aria-hidden="true"></div>
+        <div class="m-key">Активации</div>
+        <div class="m-val" id="k-orders">—</div>
+    </div>
+    <div class="admin-card metric" data-m="amount">
+        <div class="m-icon m-amount" aria-hidden="true"></div>
+        <div class="m-key">Выручка</div>
+        <div class="m-val money" id="k-amount">—</div>
+    </div>
+    <div class="admin-card metric" data-m="devices">
+        <div class="m-icon m-devices" aria-hidden="true"></div>
+        <div class="m-key">Устройства</div>
+        <div class="m-val" id="k-devs">—</div>
+    </div>
+</div>
+
+<h3 class="section-title" style="font-size:16px;">По устройствам</h3>
+<div class="admin-toolbar" style="justify-content:space-between; align-items:end;">
+    <div class="grid cols-3" style="gap:8px; align-items:end;">
+        <div class="field">
+            <label class="field__label" for="range">Период</label>
+            <select id="range" class="field__select">
+                <option value="day">День</option>
+                <option value="week">Неделя</option>
+                <option value="month" selected>Месяц</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<div class="admin-card table-wrap">
+    <div class="table" role="table" aria-label="Статистика по устройствам">
+        <div class="t-head" role="rowgroup">
+            <div class="t-row" role="row">
+                <button class="t-cell th" data-sort="name" role="columnheader" aria-sort="none">Название</button>
+                <button class="t-cell th" data-sort="amount" role="columnheader" aria-sort="none">Выручка</button>
+                <button class="t-cell th" data-sort="orders" role="columnheader" aria-sort="none">Кол-во активаций</button>
+            </div>
+        </div>
+        <div id="bydev" class="t-body" role="rowgroup"></div>
+    </div>
+</div>
+{% endblock %}
+{% block admin_scripts %}
+<script defer src="{{ url_for('static', filename='admin/analytics.js') }}"></script>
+{% endblock %}

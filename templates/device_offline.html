@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Устройство недоступно{% endblock %}
+{% block content %}
+<div class="card offline">
+    <div class="icon" aria-hidden="true">⚠️</div>
+    <h2 class="ttl">Устройство недоступно</h2>
+    <p class="desc">Устройство сейчас не в сети. Попробуйте позже.</p>
+
+    <a href="javascript:location.reload()" class="btn btn-inline">Обновить</a>
+</div>
+
+<style>
+    .offline {
+        text-align: center;
+        padding: 24px;
+    }
+
+    .offline .icon {
+        font-size: 36px;
+        margin-bottom: 8px;
+    }
+
+    .offline .ttl {
+        margin: 6px 0 8px;
+        font-weight: 800;
+    }
+
+    .offline .desc {
+        color: #9CA3AF;
+        margin: 0 0 14px;
+    }
+
+    .btn-inline {
+        display: inline-block !important;
+        width: auto !important;
+        height: auto !important;
+        padding: 10px 16px !important;
+        border-radius: 12px !important;
+        line-height: 1.2;
+    }
+</style>
+{% endblock %}

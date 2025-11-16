@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+.venv
+
+# Базы данных
+*.db
+*.sqlite
+*.sqlite3
+db_backups/
+
+# Временные файлы
+temp_archive/
+*.log
+*.tmp
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Alembic (опционально, если хотите исключить миграции)
+# alembic/versions/*.pyc

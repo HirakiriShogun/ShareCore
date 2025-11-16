@@ -1,0 +1,198 @@
+{% extends "local/layout.html" %}
+{% set header_title = 'Моя аналитика' %}
+{% block title %}Моя аналитика{% endblock %}
+{% block local_content %}
+<div class="toolbar">
+    <a class="btn neutral small" href="{{ url_for('local_admin.dashboard') }}">← Назад</a>
+</div>
+
+<!-- Фильтры для экспорта Excel -->
+<div class="local-card" style="margin-bottom: 16px;">
+    <h3 class="section-title" style="font-size: 16px; margin-bottom: 12px;">Экспорт в Excel</h3>
+    <div class="grid cols-3" style="margin-bottom: 12px;">
+        <div class="field">
+            <label class="field__label" for="export-date-from">Дата с</label>
+            <input type="date" id="export-date-from" class="field__input" />
+        </div>
+        <div class="field">
+            <label class="field__label" for="export-date-to">Дата по</label>
+            <input type="date" id="export-date-to" class="field__input" />
+        </div>
+        <div class="field" style="display: flex; align-items: flex-end;">
+            <button class="btn" id="btn-export" style="width: 100%;">Скачать XLSX</button>
+        </div>
+    </div>
+    <div style="color: var(--muted); font-size: 13px; margin-top: 8px;">
+        💡 Оставьте поля пустыми, чтобы экспортировать все данные. Если указана только дата "с", будут экспортированы все данные с этой даты по текущий момент.
+    </div>
+</div>
+
+<h2 class="section-title">Сводка</h2>
+
+<div class="grid cols-3 metrics">
+    <div class="device-card metric">
+        <div class="m-icon m-orders" aria-hidden="true"></div>
+        <div class="m-key">Активации</div>
+        <div class="m-val" id="k-orders">—</div>
+    </div>
+    <div class="device-card metric">
+        <div class="m-icon m-amount" aria-hidden="true"></div>
+        <div class="m-key">Выручка</div>
+        <div class="m-val money" id="k-amount">—</div>
+    </div>
+    <div class="device-card metric">
+        <div class="m-icon m-devices" aria-hidden="true"></div>
+        <div class="m-key">Устройств</div>
+        <div class="m-val" id="k-devs">—</div>
+    </div>
+</div>
+
+<h3 class="section-title" style="font-size: 18px; margin-top: 24px;">По устройствам</h3>
+<div id="bydev" class="stats-list"></div>
+
+<style>
+    .metrics {
+        align-items: stretch;
+    }
+
+    .metric {
+        display: grid;
+        grid-template-rows: auto auto 1fr;
+        gap: 8px;
+        padding: 20px;
+    }
+
+    .m-key {
+        color: var(--muted);
+        font-size: 14px;
+    }
+
+    .m-val {
+        font-weight: 700;
+        font-size: 22px;
+        position: relative;
+        z-index: 1;
+    }
+
+    .m-val.money {
+        color: #86efac;
+    }
+
+    .m-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        box-shadow: 0 8px 20px rgba(var(--accent-rgb), .25);
+    }
+
+    .m-orders {
+        background: linear-gradient(180deg, #60a5fa, #3b82f6);
+    }
+
+    .m-amount {
+        background: linear-gradient(180deg, #34d399, #10b981);
+    }
+
+    .m-devices {
+        background: linear-gradient(180deg, #a78bfa, #7c3aed);
+    }
+
+    .stats-list {
+        display: grid;
+        gap: 12px;
+    }
+
+    .stats-row {
+        position: relative;
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        gap: 12px;
+        align-items: center;
+        padding: 14px 16px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, .02);
+        border: 1px solid rgba(153, 171, 208, .10);
+    }
+
+    .stats-name {
+        font-weight: 600;
+        color: var(--text);
+        position: relative;
+        z-index: 1;
+    }
+
+    .stats-value {
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        position: relative;
+        z-index: 1;
+    }
+
+    .stats-value.amount {
+        color: #86efac;
+    }
+
+    .stats-value.orders {
+        color: var(--muted);
+    }
+</style>
+
+<script>
+    const $ = s => document.querySelector(s);
+    const api = (u, opt = {}) => fetch(u, { headers: { 'Content-Type': 'application/json' }, ...opt });
+    // Теперь значение уже в рублях, не нужно делить на 100
+    const rub = v => v.toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    async function load() {
+        try {
+            const r = await api('/local/api/analytics/summary');
+            const d = await r.json();
+
+            $('#k-orders').textContent = d.total_orders || 0;
+            $('#k-amount').textContent = rub(d.total_amount || 0) + ' ₽';
+            $('#k-devs').textContent = (d.by_device || []).length;
+
+            const bydevEl = $('#bydev');
+            bydevEl.innerHTML = '';
+
+            if (!d.by_device || d.by_device.length === 0) {
+                bydevEl.innerHTML = '<div style="text-align: center; color: var(--muted); padding: 20px;">Нет данных</div>';
+                return;
+            }
+
+            d.by_device.forEach(item => {
+                const row = document.createElement('div');
+                row.className = 'stats-row';
+                row.innerHTML = `
+                    <div class="stats-name">${item.name}</div>
+                    <div class="stats-value amount">${rub(item.amount)} ₽</div>
+                    <div class="stats-value orders">${item.orders} активаций</div>
+                `;
+                bydevEl.appendChild(row);
+            });
+        } catch (e) {
+            console.error('Ошибка загрузки:', e);
+        }
+    }
+
+    load();
+    
+    // Обработка экспорта с фильтрами
+    document.getElementById('btn-export')?.addEventListener('click', () => {
+        const dateFrom = document.getElementById('export-date-from')?.value || '';
+        const dateTo = document.getElementById('export-date-to')?.value || '';
+        
+        let url = '/local/api/analytics/export.xlsx';
+        const params = new URLSearchParams();
+        
+        if (dateFrom) params.append('date_from', dateFrom);
+        if (dateTo) params.append('date_to', dateTo);
+        
+        if (params.toString()) {
+            url += '?' + params.toString();
+        }
+        
+        window.location.href = url;
+    });
+</script>
+{% endblock %}

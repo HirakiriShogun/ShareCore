@@ -1,0 +1,98 @@
+{% extends "local/layout.html" %}
+{% set header_title = 'Мои работники' %}
+{% block title %}Мои работники{% endblock %}
+{% block local_content %}
+<div class="toolbar">
+    <a class="btn neutral small" href="{{ url_for('local_admin.dashboard') }}">← Назад</a>
+    <a class="btn small" href="{{ url_for('local_admin.workers_new_page') }}">+ Добавить работника</a>
+</div>
+
+<h2 class="section-title">Работники</h2>
+<div id="list" class="grid"></div>
+<div id="empty-state" class="message-box hidden" style="text-align: center; color: var(--muted);">
+    Нет работников. Добавьте первого работника!
+</div>
+
+<script>
+    const $ = s => document.querySelector(s);
+    const api = (u, opt = {}) => fetch(u, { headers: { 'Content-Type': 'application/json' }, ...opt });
+
+    function workerCard(w) {
+        const statusPill = w.is_enabled
+            ? '<span class="pill on">Активен</span>'
+            : '<span class="pill off">Отключен</span>';
+        const toggleLabel = w.is_enabled ? 'Отключить' : 'Включить';
+        const toggleClass = w.is_enabled ? 'neutral' : '';
+
+        return `
+            <div class="worker-card" data-id="${w.id}">
+                <div class="worker-title">${w.email}</div>
+                <div class="worker-info">
+                    <div class="info-row">
+                        <span class="info-label">Пароль:</span>
+                        <span class="info-value" style="font-family: monospace;">${w.password || '••••••••'}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Статус:</span>
+                        <span>${statusPill}</span>
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <button class="btn small ${toggleClass}" data-act="toggle">${toggleLabel}</button>
+                    <button class="btn small danger" data-act="del">Удалить</button>
+                </div>
+            </div>`;
+    }
+
+    function bindActions(row) {
+        row.addEventListener('click', async (e) => {
+            const btn = e.target.closest('button');
+            if (!btn) return;
+
+            const id = row.dataset.id;
+            const act = btn.dataset.act;
+
+            if (act === 'toggle') {
+                const r = await api(`/local/api/workers/${id}/toggle`, { method: 'POST' });
+                if (r.ok) loadWorkers();
+            }
+            if (act === 'del') {
+                if (!confirm('Удалить работника?')) return;
+                const r = await api(`/local/api/workers/${id}`, { method: 'DELETE' });
+                if (r.ok) loadWorkers();
+            }
+        });
+    }
+
+    async function loadWorkers() {
+        try {
+            const r = await api('/local/api/workers');
+            const data = await r.json();
+
+            const listEl = $('#list');
+            const emptyEl = $('#empty-state');
+
+            if (data.length === 0) {
+                listEl.innerHTML = '';
+                emptyEl.classList.remove('hidden');
+                return;
+            }
+
+            emptyEl.classList.add('hidden');
+            listEl.innerHTML = '';
+
+            data.forEach(w => {
+                const wrapper = document.createElement('div');
+                wrapper.innerHTML = workerCard(w);
+                const card = wrapper.firstElementChild;
+                bindActions(card);
+                listEl.appendChild(card);
+            });
+        } catch (e) {
+            console.error('Ошибка загрузки работников:', e);
+        }
+    }
+
+    loadWorkers();
+</script>
+{% endblock %}

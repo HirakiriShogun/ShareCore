@@ -1,0 +1,23 @@
+{% extends "admin/layout.html" %}
+{% block title %}Список пользователей{% endblock %}
+{% block admin_content %}
+<div class="admin-toolbar">
+  <a class="btn small" href="{{ url_for('admin.dashboard') }}">Назад</a>
+</div>
+<h2 class="section-title">Пользователи</h2>
+<div class="admin-card searchbar">
+  <div class="grid search-grid">
+    <input id="search" type="search" class="field__input search-input" placeholder="Поиск по email...">
+    <div class="chips" id="role-chips" role="tablist" aria-label="Фильтр ролей">
+      <button class="chip is-active" data-role="all">Все</button>
+      <button class="chip chip-sa" data-role="superadmin">superadmin</button>
+      <button class="chip chip-la" data-role="localadmin">localadmin</button>
+      <button class="chip" data-role="worker">worker</button>
+    </div>
+  </div>
+</div>
+<div id="users-list" class="grid"></div>
+{% endblock %}
+{% block admin_scripts %}
+<script defer src="{{ url_for('static', filename='admin/users_list.js') }}"></script>
+{% endblock %}

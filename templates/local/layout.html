@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<link rel="preload" as="style" href="{{ url_for('static', filename='local/styles.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='local/styles.css') }}">
+
+<div class="local-page">
+    <div class="local-bg" aria-hidden="true">
+        <div class="bg-blob bg-blob-a"></div>
+        <div class="bg-blob bg-blob-b"></div>
+        <div class="liquid-overlay"></div>
+        <div class="glass-caustics"></div>
+        <div class="bg-grid"></div>
+    </div>
+
+    <header class="local-header">
+        <div class="brand-title">Панель владельца · {{ current_user.email if current_user.is_authenticated else '' }}
+        </div>
+    </header>
+
+    <main class="local-container">
+        <section class="local-card">
+            {% block local_content %}{% endblock %}
+        </section>
+    </main>
+</div>
+
+<script defer src="{{ url_for('static', filename='local/app.js') }}"></script>
+{% block local_scripts %}{% endblock %}
+{% endblock %}

@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="ru">
+
+<head>
+    <meta charset="utf-8">
+    <title>{{ title or "ShareCore" }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#0F1115">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0F1115;
+            /* серо-синий фон */
+            --bg-2: #0B1220;
+            /* глубокий сине-серый */
+            --card: #121722;
+            /* карточки */
+            --field: #162132;
+            /* поля ввода */
+            --text: #EAF3FF;
+            /* светлый текст с голубым оттенком */
+            --muted: #9DB0C9;
+            /* приглушённый текст */
+            --accent: #3BA7FF;
+            /* акцент — голубовато-синий */
+            --accent-2: #2B8AEF;
+            /* hover/градиент */
+            --cyan: #4CC9F0;
+            /* дополнительный акцент */
+            --danger: #EF4444;
+            --radius: 14px;
+            --shadow: 0 8px 28px rgba(14, 30, 64, .45);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            height: 100%;
+        }
+
+        body {
+            margin: 0;
+            background: linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+            color: var(--text);
+            font-family: Manrope, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            display: block;
+            overflow-x: hidden;
+        }
+
+        /* Холст под мобильный 375×812, центрируем */
+        .mobile-frame {
+            width: 100%;
+            max-width: 980px;
+            /* desktop-friendly */
+            min-height: 100vh;
+            padding: 20px 16px 32px;
+            /* место под футер */
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            margin: 0 auto;
+            /* горизонтальный центр */
+        }
+
+        .card {
+            width: 100%;
+            background: linear-gradient(180deg, rgba(17, 26, 46, .92), rgba(17, 26, 46, .92));
+            border-radius: var(--radius);
+            padding: 18px;
+            box-shadow: var(--shadow);
+        }
+
+        .title {
+            font-size: 20px;
+            font-weight: 600;
+            text-align: center;
+            margin: 4px 0 18px;
+        }
+
+        .field-block {
+            margin-bottom: 14px;
+        }
+
+        .field-label {
+            display: block;
+            font-size: 15px;
+            color: var(--muted);
+            margin-bottom: 8px;
+        }
+
+        .input {
+            width: 100%;
+            height: 48px;
+            border: none;
+            outline: none;
+            border-radius: 12px;
+            padding: 0 14px;
+            background: var(--field);
+            color: var(--text);
+            font-size: 16px;
+            letter-spacing: .2px;
+        }
+
+        .btn {
+            width: 100%;
+            height: 48px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(180deg, var(--accent), var(--accent-2));
+            color: #fff;
+            font-weight: 700;
+            font-size: 16px;
+            margin-top: 6px;
+            cursor: pointer;
+            transition: transform .04s ease, filter .2s;
+        }
+
+        .btn:active {
+            transform: scale(.995);
+        }
+
+        .btn:hover {
+            filter: brightness(1.04);
+        }
+
+        .error {
+            background: rgba(239, 68, 68, .14);
+            border: 1px solid rgba(239, 68, 68, .35);
+            color: #fecaca;
+            border-radius: 12px;
+            padding: 10px 12px;
+            font-size: 14px;
+            margin-bottom: 12px;
+            text-align: center;
+            animation: fadeIn .18s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-2px)
+            }
+
+            to {
+                opacity: 1;
+                transform: none
+            }
+        }
+
+        /* --- Глобальный футер --- */
+        .site-footer {
+            position: sticky;
+            /* не перекрывает контент и не даёт визуальную полосу */
+            bottom: 12px;
+            display: flex;
+            justify-content: center;
+            padding: 10px 12px;
+            pointer-events: none;
+        }
+
+        .footer-inner {
+            pointer-events: auto;
+            backdrop-filter: blur(6px);
+            background: rgba(18, 23, 34, .55);
+            border: 1px solid rgba(153, 171, 208, .14);
+            color: var(--muted);
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 14px;
+            box-shadow: 0 6px 20px rgba(10, 16, 32, .28);
+            font-size: 13px;
+            line-height: 1;
+        }
+
+        .footer-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--cyan);
+            box-shadow: 0 0 10px var(--cyan);
+        }
+
+        .footer-sep {
+            opacity: .25;
+        }
+    </style>
+    <meta name="selfwork.ru" content="aiut3bv8G58dhkP3HOGZqz7gHgVCfh8hDa4Vn6XQPVRG9nj7ZF" />
+</head>
+
+<body>
+    <div class="mobile-frame">
+        {% block content %}{% endblock %}
+    </div>
+    <div class="site-footer" role="contentinfo" aria-label="Реквизиты">
+        <div class="footer-inner">
+            <span class="footer-dot"></span>
+            <span>ИНН: <strong>590418374066</strong></span>
+            <span class="footer-sep">·</span>
+            <span>ShareCore © {{ (now().year) if false else '' }}</span>
+            <span class="footer-sep">·</span>
+            <span>С любовью из Екатеринбурга</span>
+        </div>
+    </div>
+</body>
+
+</html>

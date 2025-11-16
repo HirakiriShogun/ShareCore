@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+{% block title %}Доступ к устройствам{% endblock %}
+{% block content %}
+<div class="card" style="width:100%;">
+    <div class="topbar">
+        <div class="brand">Доступ к устройствам</div>
+    </div>
+
+    <div id="alert" class="alert" style="display:none;"></div>
+
+    <div id="grid" class="grid"></div>
+</div>
+
+<style>
+    .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
+
+    .brand {
+        font-weight: 800;
+        font-size: 18px;
+    }
+
+    .link-admin {
+        color: #6B7280;
+        font-size: 12px;
+        text-decoration: none;
+    }
+
+    .alert {
+        border-radius: 12px;
+        padding: 12px;
+        font-size: 14px;
+        margin: 8px 0;
+    }
+
+    .alert-ok {
+        background: rgba(34, 197, 94, .14);
+        border: 1px solid rgba(34, 197, 94, .35);
+        color: #bbf7d0;
+    }
+
+    .alert-err {
+        background: rgba(239, 68, 68, .14);
+        border: 1px solid rgba(239, 68, 68, .35);
+        color: #fecaca;
+    }
+
+    .grid {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: 1fr;
+    }
+
+    @media (min-width:720px) {
+        .grid {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+
+    .dev {
+        background: #2A2A2D;
+        border-radius: 12px;
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .name {
+        font-weight: 800;
+        font-size: 16px;
+    }
+
+    .sub {
+        color: #9CA3AF;
+        font-size: 13px;
+    }
+
+    .row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .pill {
+        padding: 4px 8px;
+        border-radius: 999px;
+        font-size: 12px;
+        line-height: 1;
+        height: fit-content;
+    }
+
+    .on {
+        background: #064E3B;
+        color: #A7F3D0;
+    }
+
+    .off {
+        background: #3F1D1D;
+        color: #FECACA;
+    }
+
+    .input.mini {
+        height: 40px;
+        width: auto;
+        min-width: 120px;
+    }
+
+    .btn {
+        height: 40px;
+        padding: 0 16px;
+        border: none;
+        border-radius: 10px;
+        font-weight: 800;
+        color: #fff;
+        cursor: pointer;
+    }
+
+    .btn-primary {
+        background: linear-gradient(180deg, var(--accent), var(--accent-2));
+    }
+
+    .btn-primary:disabled {
+        opacity: .6;
+        cursor: default;
+    }
+</style>
+
+<script>
+  const $=s=>document.querySelector(s);
+  const api=(u,opt={})=>fetch(u,{headers:{'Content-Type':'application/json'},...opt});
+  const rub=v=>(v/100).toLocaleString('ru-RU',{minimumFractionDigits:2,maximumFractionDigits:2});
+  const fmt=(sec)=>{ sec=parseInt(sec||0,10); if(!sec||sec<=0) return '—';
+    const m=Math.floor(sec/60), s=sec%60; return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`; };
+
+  function alertOk(msg){ const a=$('#alert'); a.className='alert alert-ok'; a.textContent=msg; a.style.display='block'; }
+  function alertErr(msg){ const a=$('#alert'); a.className='alert alert-err'; a.textContent=msg; a.style.display='block'; }
+  function alertHide(){ $('#alert').style.display='none'; }
+
+  function card(d){
+    const state = d.busy ? `<span class="pill off">занято · ${fmt(d.remaining_seconds)}</span>` : `<span class="pill on">свободно</span>`;
+    return `
+      <div class="dev" data-id="${d.id}">
+        <div class="name">${d.name}</div>
+        <div class="sub">Тариф: ${rub(d.price_per_minute)} ₽/мин</div>
+        <div class="row">${state}</div>
+        <div class="row">
+          <select class="input mini" data-role="minutes">
+            <option value="5">5 мин</option>
+            <option value="10" selected>10 мин</option>
+            <option value="15">15 мин</option>
+            <option value="30">30 мин</option>
+            <option value="60">60 мин</option>
+          </select>
+          <button class="btn btn-primary" data-role="pay">Получить доступ</button>
+        </div>
+        <div class="sub" data-role="total" style="opacity:.9;">Итого: —</div>
+      </div>`;
+  }
+
+  function bindPricing(cardEl, d){
+    const sel = cardEl.querySelector('[data-role="minutes"]');
+    const total = cardEl.querySelector('[data-role="total"]');
+    const update = ()=>{ const m=parseInt(sel.value||'0',10); const sum = d.price_per_minute*m; total.textContent = 'Итого: ' + rub(sum) + ' ₽'; };
+    sel.addEventListener('change', update); update();
+  }
+
+  async function load(){
+    const r = await api('/api/devices'); const data = await r.json();
+    const grid = $('#grid'); grid.innerHTML='';
+    data.forEach(d=>{
+      const w=document.createElement('div'); w.innerHTML=card(d);
+      const el=w.firstElementChild;
+      bindPricing(el, d);
+
+      const payBtn = el.querySelector('[data-role="pay"]');
+      const sel    = el.querySelector('[data-role="minutes"]');
+      payBtn.disabled = d.busy;
+
+      payBtn.addEventListener('click', async ()=>{
+        alertHide();
+        const minutes = parseInt(sel.value||'0',10);
+        payBtn.disabled = true; const old=payBtn.textContent; payBtn.textContent='Оформляем...';
+        try{
+          const rr = await api('/api/rent', {method:'POST', body:JSON.stringify({device_id:d.id, minutes})});
+          if(rr.ok){
+            const j = await rr.json();
+            const dt = new Date(j.until);
+            alertOk('Доступ активен до ' + dt.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}));
+            load();
+          }else{
+            const j = await rr.json().catch(()=>({}));
+            if(rr.status===409 && j.error==='busy'){ alertErr('Устройство занято, осталось '+fmt(j.remaining_seconds)); }
+            else if(j.error==='device_unavailable'){ alertErr('Устройство недоступно'); }
+            else if(rr.status===400){ alertErr('Неверные данные'); }
+            else{ alertErr('Ошибка'); }
+          }
+        }catch(e){ alertErr('Сеть недоступна'); }
+        finally{ payBtn.disabled=false; payBtn.textContent=old; }
+      });
+
+      grid.appendChild(el);
+    });
+  }
+
+  setInterval(load, 5000);
+  load();
+</script>
+{% endblock %}
