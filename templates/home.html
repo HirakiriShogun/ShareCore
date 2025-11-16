@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>ShareCore — Платформа для автоматизации проката</title>
+    <title>ShareCore — дистанционная платформа управления прокатом</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -25,14 +25,13 @@
                 <span></span>
             </button>
             <nav class="header-nav">
-                <a href="#about">бляя платформе</a>
+                <a href="#about">Платформа</a>
                 <a href="#how-it-works">Как работает</a>
                 <a href="#payment">Оплата</a>
-                <a href="#products">Товары и услуги</a>
+                <a href="#products">Оборудование</a>
                 <a href="#devices">Устройства</a>
-                <a href="#customer-contracts">Договора</a>
-                <a href="#contacts">Контакты</a>
-                <a href="{{ url_for('public.login') }}" class="btn-login">Вход</a>
+                <a href="#contacts">Документы и контакты</a>
+                <a href="{{ url_for('public.login') }}" class="btn-login">Личный кабинет</a>
             </nav>
         </div>
     </header>
@@ -45,13 +44,32 @@
         </div>
         <div class="container">
             <div class="hero-content hero-content--centered">
-                <p class="hero-eyebrow">Цифровой сервис нового проката</p>
-                <h2 class="hero-title">ShareCore — платформа для преобразования простого проката в шеринговый сервис
+                <p class="hero-eyebrow">Premium IoT Rental Platform</p>
+                <h2 class="hero-title">
+                    ShareCore — превращаем классический прокат в дорогой цифровой сервис
                 </h2>
                 <p class="hero-subtitle">
-                    Наш сервис подходит для бизнеса, который сдаёт СИМ, велосипеды или электротранспорт на время.
-                    Мы создаём решения, превращающие обычный прокат в полностью автоматизированный онлайн-сервис.
+                    Мы подключаем устройства, контролируем оплату и открываем доступ только после успешной транзакции.
+                    Владельцы бизнеса получают удалённое управление, аналитические панели и гарантию прозрачности.
                 </p>
+                <div class="hero-buttons">
+                    <a href="#contacts" class="btn btn-primary">Получить консультацию</a>
+                    <a href="#products" class="btn btn-ghost">Оборудование</a>
+                </div>
+                <div class="hero-meta">
+                    <div class="hero-meta-card">
+                        <span class="hero-meta-value">12+</span>
+                        <span class="hero-meta-label">сегментов проката</span>
+                    </div>
+                    <div class="hero-meta-card">
+                        <span class="hero-meta-value">24/7</span>
+                        <span class="hero-meta-label">мониторинг устройств</span>
+                    </div>
+                    <div class="hero-meta-card">
+                        <span class="hero-meta-value">3 шага</span>
+                        <span class="hero-meta-label">от подключения до запуска</span>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -60,14 +78,19 @@
         <div class="container">
             <div class="section-head">
                 <p class="section-eyebrow">О платформе</p>
-                <h2 class="section-title">ShareCore для владельцев проката</h2>
+                <h2 class="section-title">ShareCore для владельцев прокатного бизнеса</h2>
             </div>
             <div class="focus-card">
-                <h3>Мы созданы для удобства владельцев прокатного бизнеса</h3>
+                <h3>Мы создали ShareCore, чтобы дать владельцам премиальный контроль над прокатом</h3>
                 <p>
-                    ShareCore помогает оптимизировать процесс оплаты, защищает от хищений в точках проката
-                    и предоставляет прозрачную статистику по каждому СИМ и транспортному средству.
+                    Платформа объединяет оплату, статус устройств, удалённое включение и аналитику. Устройства активируются
+                    только после оплаты, а все операции фиксируются в личном кабинете.
                 </p>
+                <ul class="focus-list">
+                    <li>Единый контроль оплат и состояний устройств</li>
+                    <li>Прозрачные тарифы и отчёты для бухгалтерии</li>
+                    <li>Сокращение расходов на персонал и выездные команды</li>
+                </ul>
             </div>
         </div>
     </section>
@@ -79,34 +102,22 @@
                 <h2 class="section-title">Как это работает</h2>
             </div>
             <div class="info-grid">
-                <article class="info-card info-card--primary">
-                    <p>Платформа ShareCore даёт возможность контролировать перевод средств и активацию прокатных единиц
-                        дистанционно.</p>
-                    <p>Связь устанавливается через модули ShareCore, которые приобретаются для каждого устройства.</p>
-                    <p><strong>Модуль физически встраивается</strong> в технику и управляет питанием, замком или
-                        блокировкой.
-                        Он получает команды от платформы и выполняет их после успешной онлайн-оплаты.</p>
-                    <p>Таким образом устройство активируется только после оплаты и автоматически блокируется по
-                        завершении
-                        сессии.</p>
+                <article class="info-card info-card--accent">
+                    <h3>Дистанционный контроль</h3>
+                    <p>ShareCore подключается к устройству и управляет питанием, замками, замедлением и любыми функциями
+                        безопасности. Команды выполняются только после подтверждённой онлайн-оплаты.</p>
                 </article>
-                <article class="info-card info-card--notice">
-                    <h3>Важная особенность</h3>
-                    <p>
-                        Модуль подключается к Wi‑Fi, но проводной интернет не обязателен: мы можем подключить роутер с
-                        GSM-модемом
-                        для автономной работы без кабелей.
-                        <a href="#products" class="link-clean">Подробнее в разделе «Товары и услуги»</a>.
-                    </p>
+                <article class="info-card">
+                    <h3>Модули ShareCore</h3>
+                    <p>Каждая единица техники получает модуль ShareCore. Он работает по Wi‑Fi или через GSM-роутер,
+                        принимает команды платформы и сообщает статус в реальном времени.</p>
                 </article>
-                <article class="info-card info-card--list">
-                    <h3>После заключения договора</h3>
-                    <p>Команда ShareCore выполняет подключение и настройку модулей, настраивает тарифы и QR-коды:</p>
+                <article class="info-card">
+                    <h3>Поддержка после договора</h3>
                     <ul class="info-list">
-                        <li>Подключаем модули к каждой единице техники</li>
-                        <li>Настраиваем тарифы в личном кабинете</li>
-                        <li>Устанавливаем индивидуальные QR-коды</li>
-                        <li>Сопровождаем и поддерживаем технику</li>
+                        <li>Подключаем модули и настраиваем тарифы</li>
+                        <li>Создаём QR-коды для самостоятельной оплаты</li>
+                        <li>Сопровождаем инфраструктуру и сервис 24/7</li>
                     </ul>
                 </article>
             </div>
@@ -117,18 +128,18 @@
         <div class="container">
             <div class="section-head">
                 <p class="section-eyebrow">Оплата клиентом</p>
-                <h2 class="section-title">Как клиент оплачивает прокат</h2>
+                <h2 class="section-title">Процесс оплаты выглядит прозрачно</h2>
             </div>
             <div class="dual-grid">
                 <article class="info-card">
-                    <p>1) Клиент сканирует QR-код, ведущий на страницу конкретного устройства ShareCore.</p>
-                    <p>2) Выбирает тариф и оплачивает его онлайн — банковской картой или через СБП.</p>
+                    <h3>Сценарий клиента</h3>
+                    <p>Пользователь сканирует QR-код конкретного устройства, выбирает тариф и оплачивает картой или через СБП.
+                        После оплаты оборудование автоматически активируется и работает ровно столько, сколько заказано.</p>
                 </article>
                 <article class="info-card">
-                    <h3>Мы гарантируем</h3>
-                    <p>Безопасность данных клиентов и прохождение платежей по законодательству РФ. После оплаты
-                        устройство
-                        активируется, а по окончании оплаченного времени блокируется автоматически.</p>
+                    <h3>Безопасность</h3>
+                    <p>Данные клиентов, платежи и действия устройства защищены по требованиям законодательства РФ. Каждый шаг
+                        логируется и отображается в вашем кабинете.</p>
                 </article>
             </div>
         </div>
@@ -138,18 +149,16 @@
         <div class="container">
             <div class="section-head">
                 <p class="section-eyebrow">Финансы</p>
-                <h2 class="section-title">Как поступает оплата</h2>
+                <h2 class="section-title">Как распределяются средства</h2>
             </div>
             <div class="dual-grid">
                 <article class="info-card">
-                    <p>После оплаты средства зачисляются на расчётный счёт платформы, удерживается комиссия за
-                        обслуживание
-                        модулей, а затем доход перечисляется на расчётный счёт компании в согласованный срок.</p>
+                    <p>После оплаты деньги поступают на расчётный счёт платформы, мы удерживаем комиссию за обслуживание
+                        инфраструктуры и переводим ваш доход на реквизиты компании в оговорённые сроки.</p>
                 </article>
                 <article class="info-card">
-                    <h3>Мы гарантируем</h3>
-                    <p>Прозрачность всех данных и операций. Каждая оплата и активация фиксируются и отражаются в личном
-                        кабинете.</p>
+                    <p>Каждая транзакция доступна в кабинете: вы видите источник оплаты, устройство, длительность сессии и
+                        итоговую сумму. Отчёты выгружаются в один клик.</p>
                 </article>
             </div>
         </div>
@@ -159,14 +168,15 @@
         <div class="container">
             <div class="section-head">
                 <p class="section-eyebrow">Личный кабинет</p>
-                <h2 class="section-title">Ваш контрольный центр</h2>
+                <h2 class="section-title">Статусы, аналитика и документы в одном окне</h2>
             </div>
             <div class="focus-card">
-                <p>После заключения договора вы получаете доступ к личному кабинету ShareCore, где можете:</p>
+                <p>После подключения вы получаете доступ к личному кабинету c картой устройств, статистикой загрузки и
+                    финансовыми отчётами.</p>
                 <ul class="info-list">
-                    <li>Отслеживать активность устройств в реальном времени</li>
-                    <li>Получать статистику использования прокатных средств</li>
-                    <li>Контролировать переводы и выгружать отчёты</li>
+                    <li>Мониторинг активных устройств в реальном времени</li>
+                    <li>Статистика по тарифам, выручке и нагрузке</li>
+                    <li>Выгрузка отчётов для бухгалтерии и партнёров</li>
                 </ul>
             </div>
         </div>
@@ -176,36 +186,35 @@
         <div class="container">
             <div class="section-head">
                 <p class="section-eyebrow">Оборудование</p>
-                <h2 class="section-title">Товары и услуги</h2>
+                <h2 class="section-title">Модули ShareCore и услуги по подключению</h2>
             </div>
             <div class="products-grid">
                 <article class="product-card">
                     <h3>Модуль ShareCore без GSM</h3>
-                    <p>Базовый модуль для подключения через Wi‑Fi. Управление устройством и аналитика проводятся онлайн
-                        на
-                        платформе ShareCore.</p>
+                    <p>Идеален для локаций с Wi‑Fi. Позволяет управлять устройством и получать аналитику онлайн. Подключение и
+                        настройка занимают один рабочий день.</p>
                     <div class="product-price">5 000 ₽</div>
                     <div class="product-actions">
-                        <button class="btn btn-primary open-modal" type="button">Заказать</button>
+                        <button type="button" class="btn btn-primary open-modal">Заказать</button>
                     </div>
                 </article>
                 <article class="product-card">
-                    <h3>Модуль ShareCore с GSM</h3>
-                    <p>Версия с GSM-модемом для автономных точек. Работает через мобильную сеть и подходит для удалённых
-                        локаций.</p>
+                    <h3>Модуль ShareCore c GSM</h3>
+                    <p>Для автономных точек и мобильных станций. Работает через защищённый GSM-канал и не требует проводного
+                        интернета.</p>
                     <div class="product-price">7 000 ₽</div>
                     <div class="product-actions">
-                        <button class="btn btn-primary open-modal" type="button">Заказать</button>
+                        <button type="button" class="btn btn-primary open-modal">Заказать</button>
                     </div>
                 </article>
             </div>
             <div class="products-grid single">
                 <article class="product-card">
-                    <h3>Подключение Wi‑Fi / GSM-роутера</h3>
-                    <p>Если на точке проката нет сети, установим и настроим роутер (включая GSM) для стабильной работы
-                        модулей ShareCore.</p>
+                    <h3>Установка Wi‑Fi / GSM-роутера</h3>
+                    <p>Инженеры ShareCore подберут и настроят роутер для устойчивого соединения модулей, а также обеспечат
+                        круглосуточный мониторинг канала.</p>
                     <div class="product-actions">
-                        <button class="btn btn-secondary open-modal" type="button">Заказать</button>
+                        <button type="button" class="btn btn-secondary open-modal">Связаться</button>
                     </div>
                 </article>
             </div>
@@ -216,18 +225,19 @@
         <div class="container">
             <div class="section-head">
                 <p class="section-eyebrow">Демонстрация</p>
-                <h2 class="section-title">Активные устройства ShareCore</h2>
-                <p class="section-description">Список обновляется в реальном времени. Доступ к устройству откроется
-                    после
-                    онлайн-оплаты.</p>
+                <h2 class="section-title">Публичные устройства ShareCore</h2>
+                <p class="section-description">
+                    Список обновляется в режиме реального времени. После оплаты вы попадёте на страницу управления нужным
+                    устройством.
+                </p>
             </div>
             <div id="devices-loading" class="devices-loading">
                 <div class="spinner"></div>
-                <p>Загружаем устройства...</p>
+                <p>Загружаем устройства…</p>
             </div>
             <div id="devices-grid" class="devices-grid"></div>
             <div id="devices-empty" class="devices-empty" style="display: none;">
-                <p>Сейчас нет публичных устройств. Вернитесь чуть позже.</p>
+                <p>Пока нет публичных устройств. Зайдите позже или свяжитесь с нами.</p>
             </div>
         </div>
     </section>
@@ -235,30 +245,70 @@
     <section id="contacts" class="section section-contacts">
         <div class="container">
             <div class="section-head">
-                <p class="section-eyebrow">Контакты</p>
-                <h2 class="section-title">Реквизиты и связь</h2>
+                <p class="section-eyebrow">Документы и контакты</p>
+                <h2 class="section-title">Официальные реквизиты и связи ShareCore</h2>
             </div>
-            <div class="contact-card">
-                <div class="contact-grid">
-                    <p><strong>Email:</strong> <a href="mailto:sharecore@mail.ru">sharecore@mail.ru</a></p>
-                    <p><strong>ИНН:</strong> 590418374066</p>
-                    <p><strong>ОГРНИП:</strong> 325665800227377</p>
-                    <p><strong>Город:</strong> Екатеринбург</p>
-                    <p><strong>ОКВЭД:</strong> 62.09 — деятельность, связанная с ИТ</p>
+            <div class="contact-wrapper">
+                <div class="contact-panel">
+                    <p class="contact-lead">Работаем по всей России и сопровождаем проекты от пилота до масштабирования.</p>
+                    <dl class="contact-list">
+                        <div>
+                            <dt>Email:</dt>
+                            <dd><a href="mailto:sharecore@mail.ru">sharecore@mail.ru</a></dd>
+                        </div>
+                        <div>
+                            <dt>ИНН:</dt>
+                            <dd>590418374066</dd>
+                        </div>
+                        <div>
+                            <dt>ОГРНИП:</dt>
+                            <dd>325665800227377</dd>
+                        </div>
+                        <div>
+                            <dt>ОКВЭД:</dt>
+                            <dd>62.09 — ИТ-услуги</dd>
+                        </div>
+                        <div>
+                            <dt>Город:</dt>
+                            <dd>Екатеринбург</dd>
+                        </div>
+                    </dl>
+                    <div class="contact-actions">
+                        <button type="button" class="btn btn-primary open-modal">Связаться с менеджером</button>
+                        <span class="contact-note">Ответим в течение рабочего дня</span>
+                    </div>
                 </div>
-                <div id="customer-contracts" class="document-links">
-                    <a href="{{ url_for('static', filename='documents/ПУБЛИЧНАЯ ОФЕРТА.pdf') }}"
-                        class="document-link btn btn-outline" target="_blank" rel="noopener">Публичная оферта</a>
-                    <a href="{{ url_for('static', filename='documents/Политика безопасности.pdf') }}"
-                        class="document-link btn btn-outline" target="_blank" rel="noopener">Политика безопасности</a>
-                    <a href="{{ url_for('static', filename='documents/Политика обработки персональных данных.pdf') }}"
-                        class="document-link btn btn-outline" target="_blank" rel="noopener">Политика обработки ПД</a>
-                </div>
-                <div class="payments">
-                    <p>Принимаем к оплате:</p>
-                    <div class="payment-logos">
-                        <img src="{{ url_for('static', filename='home/mir.png') }}" alt="Платёжная система МИР">
-                        <img src="{{ url_for('static', filename='home/sbp.png') }}" alt="Система быстрых платежей">
+                <div class="document-panel" id="customer-contracts">
+                    <h3>Документы</h3>
+                    <p>Все юридически значимые документы доступны в актуальной редакции.</p>
+                    <div class="document-links">
+                        <a class="document-link doc-link" target="_blank" rel="noopener"
+                            href="{{ url_for('static', filename='documents/ПУБЛИЧНАЯ ОФЕРТА.pdf') }}">
+                            <span class="doc-link__label">Публичная оферта</span>
+                            <span class="doc-link__desc">Условия оказания услуг</span>
+                        </a>
+                        <a class="document-link doc-link" target="_blank" rel="noopener"
+                            href="{{ url_for('static', filename='documents/ПОЛЬЗОВАТЕЛЬСКОЕ СОГЛАШЕНИЕ.pdf') }}">
+                            <span class="doc-link__label">Пользовательское соглашение</span>
+                            <span class="doc-link__desc">Права и обязанности сторон</span>
+                        </a>
+                        <a class="document-link doc-link" target="_blank" rel="noopener"
+                            href="{{ url_for('static', filename='documents/ПОЛИТИКА БЕЗОПАСНОСТИ.pdf') }}">
+                            <span class="doc-link__label">Политика безопасности</span>
+                            <span class="doc-link__desc">Требования к защите данных</span>
+                        </a>
+                        <a class="document-link doc-link" target="_blank" rel="noopener"
+                            href="{{ url_for('static', filename='documents/ПОЛИТИКА ОБРАБОТКИ ПЕРСОНАЛЬНЫХ ДАННЫХ.pdf') }}">
+                            <span class="doc-link__label">Политика обработки ПД</span>
+                            <span class="doc-link__desc">Сбор и хранение персональных данных</span>
+                        </a>
+                    </div>
+                    <div class="payments">
+                        <p>Принимаем к оплате</p>
+                        <div class="payment-logos">
+                            <img src="{{ url_for('static', filename='home/mir.png') }}" alt="Платёжная система МИР">
+                            <img src="{{ url_for('static', filename='home/sbp.png') }}" alt="Система быстрых платежей">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -271,7 +321,7 @@
 
     <div class="contact-modal" id="contact-modal" aria-hidden="true">
         <div class="contact-modal__dialog" role="dialog" aria-modal="true">
-            <h3>Связаться с командой ShareCore</h3>
+            <h3>Связаться с ShareCore</h3>
             <div class="modal-buttons">
                 <a href="https://t.me/MEGAB0G" class="btn btn-primary" target="_blank" rel="noopener">💬 Telegram</a>
                 <a href="mailto:sharecore@mail.ru" class="btn btn-secondary">📨 Email</a>

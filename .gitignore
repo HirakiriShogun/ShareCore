@@ -5,18 +5,11 @@ __pycache__/
 *.so
 .Python
 venv/
-env/
-ENV/
 .venv
 
-# Базы данных
-*.db
-*.sqlite
-*.sqlite3
-db_backups/
+# Полезные данные (env, *.db, бэкапы, temp_archive) храним в репозитории
 
 # Временные файлы
-temp_archive/
 *.log
 *.tmp
 
@@ -30,5 +23,5 @@ temp_archive/
 .DS_Store
 Thumbs.db
 
-# Alembic (опционально, если хотите исключить миграции)
+# Alembic (оставляем версии под контролем)
 # alembic/versions/*.pyc
