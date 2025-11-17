@@ -1224,6 +1224,17 @@ body {
     text-underline-offset: 2px;
 }
 
+.footer-author {
+    margin-top: 18px;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    color: var(--muted);
+    font-size: 0.9rem;
+    text-align: center;
+}
+
 .tg-icon {
     width: 14px;
     height: 14px;
