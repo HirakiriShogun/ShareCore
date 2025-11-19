@@ -28,3 +28,6 @@ class Config:
     _currency = os.environ.get("ALFABANK_CURRENCY", "")
     ALFABANK_CURRENCY = int(_currency) if _currency and _currency.isdigit() else None
     ALFABANK_PAGE_VIEW = os.environ.get("ALFABANK_PAGE_VIEW", "") or None
+
+    # Feature flags
+    PAYMENTS_DISABLED = _env_bool("PAYMENTS_DISABLED", True)

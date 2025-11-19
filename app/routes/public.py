@@ -248,6 +248,12 @@ def api_public_rent():
 # ---------- API: создание платежа через Альфа-Банк ----------
 @bp.route("/api/payment/create", methods=["POST"])
 def api_create_payment():
+    if current_app.config.get("PAYMENTS_DISABLED"):
+        return jsonify({
+            "error": "acquiring_disabled",
+            "message": "Онлайн-оплата временно отключена, устройство активируем сразу"
+        }), 400
+
     if not alfa_bank.is_enabled():
         return jsonify({"error": "acquiring_disabled"}), 400
 

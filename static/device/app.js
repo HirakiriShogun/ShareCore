@@ -158,6 +158,8 @@
       
       // Если эквайринг отключён или недоступен, используем прямой запуск
       if (r.status === 400 && data.error === 'acquiring_disabled') {
+        msgBox.className = 'message-box success';
+        msgBox.textContent = 'Оплата временно отключена, активируем устройство...';
         const fallbackR = await fetch('/api/rent', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
