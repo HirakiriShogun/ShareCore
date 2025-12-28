@@ -7,7 +7,7 @@
     <title>ShareCore — дистанционная платформа управления прокатом</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Unbounded:wght@500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='home/styles.css') }}">
     <meta name="theme-color" content="#0F1115">
     <meta name="selfwork.ru" content="aiut3bv8G58dhkP3HOGZqz7gHgVCfh8hDa4Vn6XQPVRG9nj7ZF" />
@@ -29,7 +29,6 @@
                 <a href="#how-it-works">Как работает</a>
                 <a href="#payment">Оплата</a>
                 <a href="#products">Оборудование</a>
-                <a href="#devices">Устройства</a>
                 <a href="#contacts">Документы и контакты</a>
                 <a href="{{ url_for('public.login') }}" class="btn-login">Личный кабинет</a>
             </nav>
@@ -43,31 +42,52 @@
             <div class="bg-grid"></div>
         </div>
         <div class="container">
-            <div class="hero-content hero-content--centered">
-                <p class="hero-eyebrow">Premium IoT Rental Platform</p>
-                <h2 class="hero-title">
-                    ShareCore — превращаем классический прокат в дорогой цифровой сервис
-                </h2>
-                <p class="hero-subtitle">
-                    Мы подключаем устройства, контролируем оплату и открываем доступ только после успешной транзакции.
-                    Владельцы бизнеса получают удалённое управление, аналитические панели и гарантию прозрачности.
-                </p>
-                <div class="hero-buttons">
-                    <a href="#contacts" class="btn btn-primary">Получить консультацию</a>
-                    <a href="#products" class="btn btn-ghost">Оборудование</a>
+            <div class="hero-content hero-content--split">
+                <div class="hero-text">
+                    <p class="hero-eyebrow">Premium IoT Rental Platform</p>
+                    <h2 class="hero-title">
+                        ShareCore - превращаем классический прокат в дорогой цифровой сервис
+                    </h2>
+                    <p class="hero-subtitle">
+                        Мы подключаем устройства, контролируем оплату и открываем доступ только после успешной транзакции.
+                        Владельцы бизнеса получают удалённое управление, аналитические панели и гарантию прозрачности.
+                    </p>
+                    <div class="hero-buttons">
+                        <a href="#contacts" class="btn btn-primary">Получить консультацию</a>
+                        <a href="#products" class="btn btn-ghost">Оборудование</a>
+                    </div>
+                    <div class="hero-meta">
+                        <div class="hero-meta-card">
+                            <span class="hero-meta-value">12+</span>
+                            <span class="hero-meta-label">сегментов проката</span>
+                        </div>
+                        <div class="hero-meta-card">
+                            <span class="hero-meta-value">24/7</span>
+                            <span class="hero-meta-label">мониторинг устройств</span>
+                        </div>
+                        <div class="hero-meta-card">
+                            <span class="hero-meta-value">3 шага</span>
+                            <span class="hero-meta-label">от подключения до запуска</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="hero-meta">
-                    <div class="hero-meta-card">
-                        <span class="hero-meta-value">12+</span>
-                        <span class="hero-meta-label">сегментов проката</span>
+                <div class="hero-visual" aria-hidden="true">
+                    <div class="hero-orb"></div>
+                    <div class="hero-ring"></div>
+                    <div class="hero-card hero-card--a">
+                        <span class="hero-card__label">Контроль</span>
+                        <span class="hero-card__value">0.9 сек</span>
+                        <span class="hero-card__desc">задержка команд</span>
                     </div>
-                    <div class="hero-meta-card">
-                        <span class="hero-meta-value">24/7</span>
-                        <span class="hero-meta-label">мониторинг устройств</span>
+                    <div class="hero-card hero-card--b">
+                        <span class="hero-card__label">Доступность</span>
+                        <span class="hero-card__value">99.8%</span>
+                        <span class="hero-card__desc">онлайн устройств</span>
                     </div>
-                    <div class="hero-meta-card">
-                        <span class="hero-meta-value">3 шага</span>
-                        <span class="hero-meta-label">от подключения до запуска</span>
+                    <div class="hero-card hero-card--c">
+                        <span class="hero-card__label">Безопасность</span>
+                        <span class="hero-card__value">PCI DSS</span>
+                        <span class="hero-card__desc">платёжный контур</span>
                     </div>
                 </div>
             </div>
@@ -221,28 +241,7 @@
         </div>
     </section>
 
-    <section id="devices" class="section section-devices">
-        <div class="container">
-            <div class="section-head">
-                <p class="section-eyebrow">Демонстрация</p>
-                <h2 class="section-title">Публичные устройства ShareCore</h2>
-                <p class="section-description">
-                    Список обновляется в режиме реального времени. После оплаты вы попадёте на страницу управления нужным
-                    устройством.
-                </p>
-            </div>
-            <div id="devices-loading" class="devices-loading">
-                <div class="spinner"></div>
-                <p>Загружаем устройства…</p>
-            </div>
-            <div id="devices-grid" class="devices-grid"></div>
-            <div id="devices-empty" class="devices-empty" style="display: none;">
-                <p>Пока нет публичных устройств. Зайдите позже или свяжитесь с нами.</p>
-            </div>
-        </div>
-    </section>
-
-    <section id="contacts" class="section section-contacts">
+<section id="contacts" class="section section-contacts">
         <div class="container">
             <div class="section-head">
                 <p class="section-eyebrow">Документы и контакты</p>
@@ -257,20 +256,36 @@
                             <dd><a href="mailto:sharecore@mail.ru">sharecore@mail.ru</a></dd>
                         </div>
                         <div>
+                            <dt>ИП:</dt>
+                            <dd>Серебренников Денис Дмитриевич</dd>
+                        </div>
+                        <div>
                             <dt>ИНН:</dt>
-                            <dd>590418374066</dd>
+                            <dd>661900401996</dd>
                         </div>
                         <div>
                             <dt>ОГРНИП:</dt>
-                            <dd>325665800227377</dd>
+                            <dd>325665800031241</dd>
                         </div>
                         <div>
-                            <dt>ОКВЭД:</dt>
-                            <dd>62.09 — ИТ-услуги</dd>
+                            <dt>Расчетный счет:</dt>
+                            <dd>40802810738190005935</dd>
                         </div>
                         <div>
-                            <dt>Город:</dt>
-                            <dd>Екатеринбург</dd>
+                            <dt>Банк:</dt>
+                            <dd>ФИЛИАЛ "ЕКАТЕРИНБУРГСКИЙ" АО "АЛЬФА-БАНК"</dd>
+                        </div>
+                        <div>
+                            <dt>БИК:</dt>
+                            <dd>046577964</dd>
+                        </div>
+                        <div>
+                            <dt>Корр. счет:</dt>
+                            <dd>30101810100000000964</dd>
+                        </div>
+                        <div>
+                            <dt>Юридический адрес:</dt>
+                            <dd>623300, РОССИЯ, Свердловская, Красноуфимск, Улица 8 Марта, д. 51, квартира/офис 43</dd>
                         </div>
                     </dl>
                     <div class="contact-actions">
@@ -319,7 +334,9 @@
         <div class="footer-content">
             <div class="footer-row">
                 <div class="footer-dot"></div>
-                <span>INN: <strong>590418374066</strong></span>
+                <span>ИНН: <strong>661900401996</strong></span>
+                <span class="footer-sep">&middot;</span>
+                <span>ОГРНИП: 325665800031241</span>
                 <span class="footer-sep">&middot;</span>
                 <span>ShareCore &copy;</span>
                 <span class="footer-sep">&middot;</span>

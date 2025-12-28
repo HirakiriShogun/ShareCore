@@ -4,7 +4,17 @@
 {% block local_content %}
 <div class="toolbar">
     <a class="btn neutral small"
-        href="{{ url_for('local_admin.dashboard') if can_control else url_for('public.login') }}">← Назад</a>
+        href="{{ url_for('local_admin.dashboard') if current_user.role == 'localadmin' else url_for('public.logout') }}">← Назад</a>
+</div>
+
+<div class="device-picker">
+    <div class="field">
+        <label class="field__label" for="device-select">Выберите устройство</label>
+        <div class="device-picker-row">
+            <select class="field__select" id="device-select"></select>
+            <button class="btn small" id="open-device">Открыть</button>
+        </div>
+    </div>
 </div>
 
 <h2 class="section-title">Статусы устройств</h2>
@@ -104,23 +114,40 @@
 <script>
     const $ = s => document.querySelector(s);
 
-    function deviceStatusCard(dev) {
-        const statusPill = dev.relay_state
-            ? '<span class="pill on">Включено</span>'
-            : '<span class="pill off">Выключено</span>';
+    const selectEl = $('#device-select');
+    const openBtn = $('#open-device');
 
+    const formatTime = (seconds) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    function deviceStatusCard(dev) {
         const onlineIndicator = dev.online
             ? '<span class="status-dot on" title="Онлайн"></span> Онлайн'
             : '<span class="status-dot off" title="Оффлайн"></span> Оффлайн';
 
-        let timerHtml = '';
+        let statusPill = '<span class="pill off">Выключено</span>';
         if (dev.relay_state && dev.remaining_seconds > 0) {
-            const mins = Math.floor(dev.remaining_seconds / 60);
-            const secs = dev.remaining_seconds % 60;
+            statusPill = dev.starts_in_seconds > 0
+                ? '<span class="pill wait">Запуск</span>'
+                : '<span class="pill on">Включено</span>';
+        }
+
+        let timerHtml = '';
+        if (dev.starts_in_seconds > 0) {
+            timerHtml = `
+                <div class="timer-display">
+                    <span class="timer-label">Запуск через:</span>
+                    <span class="timer-value">${formatTime(dev.starts_in_seconds)}</span>
+                </div>
+            `;
+        } else if (dev.relay_state && dev.remaining_seconds > 0) {
             timerHtml = `
                 <div class="timer-display">
                     <span class="timer-label">Осталось:</span>
-                    <span class="timer-value">${mins}:${secs.toString().padStart(2, '0')}</span>
+                    <span class="timer-value">${formatTime(dev.remaining_seconds)}</span>
                 </div>
             `;
         }
@@ -134,7 +161,7 @@
                 <div class="device-status-info">
                     <div class="device-status-row">
                         <span class="device-status-label">UID:</span>
-                        <span class="device-status-value">${dev.uid || '—'}</span>
+                        <span class="device-status-value">${dev.uid || '-'}</span>
                     </div>
                     <div class="device-status-row">
                         <span class="device-status-label">Статус:</span>
@@ -146,14 +173,46 @@
         `;
     }
 
+    function fillPicker(devices) {
+        if (!selectEl || !openBtn) return;
+
+        if (!devices.length) {
+            selectEl.innerHTML = '<option value="">Нет доступных устройств</option>';
+            selectEl.disabled = true;
+            openBtn.disabled = true;
+            return;
+        }
+
+        const current = selectEl.value;
+        selectEl.innerHTML = devices.map(dev => {
+            const state = !dev.online
+                ? 'оффлайн'
+                : dev.starts_in_seconds > 0
+                    ? `запуск ${formatTime(dev.starts_in_seconds)}`
+                    : dev.relay_state && dev.remaining_seconds > 0
+                        ? `включено ${formatTime(dev.remaining_seconds)}`
+                        : 'выключено';
+            return `<option value="${dev.id}">${dev.name} · ${state}</option>`;
+        }).join('');
+
+        if (current) {
+            selectEl.value = current;
+        }
+
+        selectEl.disabled = false;
+        openBtn.disabled = false;
+    }
+
     async function poll() {
         try {
-            const r = await fetch("/local/api/worker/status");
+            const r = await fetch('/local/api/worker/status');
             if (!r.ok) return;
 
             const data = await r.json();
             const listEl = $('#list');
             const emptyEl = $('#empty-state');
+
+            fillPicker(data);
 
             if (data.length === 0) {
                 listEl.innerHTML = '';
@@ -175,7 +234,15 @@
         }
     }
 
-    // Обновляем каждые 2 секунды
+    if (openBtn && selectEl) {
+        openBtn.addEventListener('click', () => {
+            const value = selectEl.value;
+            if (value) {
+                window.location.href = `/local/worker/device/${value}`;
+            }
+        });
+    }
+
     poll();
     setInterval(poll, 2000);
 </script>

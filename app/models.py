@@ -1,5 +1,6 @@
 # app/models.py
-from datetime import datetime
+from datetime import datetime, timedelta
+from typing import Optional
 from .db import db
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
@@ -47,6 +48,7 @@ class Device(db.Model):
     is_active = db.Column(db.Boolean, default=True, index=True)
     relay_state = db.Column(db.Boolean, default=False, nullable=False)
     active_until = db.Column(db.DateTime, nullable=True)
+    relay_start_at = db.Column(db.DateTime, nullable=True)
     last_seen_at = db.Column(db.DateTime, nullable=True)
     allowed_minutes = db.Column(db.JSON, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -108,3 +110,34 @@ class DeviceStats(db.Model):
 
 def is_online(device, timeout=20):
     return bool(device.last_seen_at and (datetime.utcnow() - device.last_seen_at).total_seconds() < timeout)
+
+
+class ClientConsent(db.Model):
+    __tablename__ = "client_consent"
+
+    id = db.Column(db.Integer, primary_key=True)
+    owner_id = db.Column(db.Integer, db.ForeignKey("user.id", ondelete="SET NULL"), nullable=True, index=True)
+    device_id = db.Column(db.Integer, db.ForeignKey("device.id", ondelete="SET NULL"), nullable=True, index=True)
+    consent_date = db.Column(db.Date, nullable=False, index=True)
+    consent_time = db.Column(db.Time, nullable=False, index=True)
+    email = db.Column(db.String(120), nullable=False, index=True)
+    agreed = db.Column(db.Boolean, nullable=False, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+
+def schedule_activation(device, minutes: int, *, now: Optional[datetime] = None, delay_seconds: int = 0):
+    now = now or datetime.utcnow()
+    delay = max(0, int(delay_seconds or 0))
+    start_at = now + timedelta(seconds=delay) if delay else now
+    device.relay_state = True
+    device.relay_start_at = start_at if delay else None
+    device.active_until = start_at + timedelta(minutes=minutes)
+    return device.active_until
+
+
+def clear_expired_activation(device, *, now: Optional[datetime] = None):
+    now = now or datetime.utcnow()
+    if device.relay_state and device.active_until and device.active_until <= now:
+        device.relay_state = False
+        device.active_until = None
+        device.relay_start_at = None

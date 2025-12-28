@@ -1,0 +1,63 @@
+{% extends "local/layout.html" %}
+{% set header_title = 'Согласия клиентов' %}
+{% block title %}Согласия клиентов{% endblock %}
+{% block local_content %}
+<div class="toolbar">
+    <a class="btn neutral small" href="{{ url_for('local_admin.dashboard') }}">← Назад</a>
+</div>
+
+<h2 class="section-title">Согласия клиентов</h2>
+<div id="consents-list" class="grid"></div>
+<div id="consents-empty" class="message-box hidden" style="text-align: center; color: var(--muted);">
+    Согласия пока не зафиксированы
+</div>
+
+<script>
+    const $ = s => document.querySelector(s);
+
+    function consentCard(row) {
+        return `
+            <div class="device-card">
+                <div class="device-title">${row.email}</div>
+                <div class="device-info">
+                    <div class="info-row">
+                        <span class="info-label">Дата</span>
+                        <span class="info-value">${row.date || '-'}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Время</span>
+                        <span class="info-value">${row.time || '-'}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Согласие</span>
+                        <span class="info-value">${row.agreed ? 'Да' : 'Нет'}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    async function loadConsents() {
+        try {
+            const r = await fetch('/local/api/consents');
+            if (!r.ok) return;
+            const data = await r.json();
+            const listEl = $('#consents-list');
+            const emptyEl = $('#consents-empty');
+
+            if (!data.length) {
+                listEl.innerHTML = '';
+                emptyEl.classList.remove('hidden');
+                return;
+            }
+
+            emptyEl.classList.add('hidden');
+            listEl.innerHTML = data.map(consentCard).join('');
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    loadConsents();
+</script>
+{% endblock %}

@@ -8,7 +8,7 @@
     <meta name="theme-color" content="#0F1115">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Unbounded:wght@500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg: #0F1115;
@@ -32,6 +32,8 @@
             --danger: #EF4444;
             --radius: 14px;
             --shadow: 0 8px 28px rgba(14, 30, 64, .45);
+            --font-body: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
+            --font-display: 'Unbounded', 'Manrope', system-ui, sans-serif;
         }
 
         * {
@@ -46,7 +48,7 @@
             margin: 0;
             background: linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
             color: var(--text);
-            font-family: Manrope, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+            font-family: var(--font-body);
             display: block;
             overflow-x: hidden;
         }
@@ -79,6 +81,7 @@
             font-weight: 600;
             text-align: center;
             margin: 4px 0 18px;
+            font-family: var(--font-display);
         }
 
         .field-block {
@@ -220,7 +223,7 @@
     <div class="site-footer" role="contentinfo" aria-label="Реквизиты">
         <div class="footer-inner">
             <span class="footer-dot"></span>
-            <span>INN: <strong>590418374066</strong></span>
+            <span>ИНН: <strong>661900401996</strong></span>
             <span class="footer-sep">&middot;</span>
             <span>ShareCore &copy; {{ now().year if now else '' }}</span>
             <span class="footer-sep">&middot;</span>

@@ -13,7 +13,8 @@
     </div>
 
     <header class="local-header">
-        <div class="brand-title">Панель владельца · {{ current_user.email if current_user.is_authenticated else '' }}
+        <div class="brand-title">
+            {{ header_title or 'Панель владельца' }} · {{ current_user.email if current_user.is_authenticated else '' }}
         </div>
     </header>
 

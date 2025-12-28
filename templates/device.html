@@ -33,13 +33,12 @@
             </div>
 
             <div id="controls" class="device-controls">
-                <div class="section-label">Выберите время доступа</div>
-                <div class="time-chips" id="chips" role="group" aria-label="Время доступа"></div>
-
-                <div class="total-section">
-                    <span class="total-label">К оплате:</span>
-                    <span class="total-amount"><span id="total">0</span> ₽</span>
-                </div>
+                <div class="section-label">Контактные данные</div>
+                <label class="device-field">
+                    <span class="device-field__label">Email для подтверждения</span>
+                    <input id="client-email" class="device-field__input" type="email"
+                        placeholder="name@example.com" autocomplete="email" required>
+                </label>
 
                 <div class="agreement-section">
                     <label class="agreement-label">
@@ -65,10 +64,11 @@
                 </div>
 
                 <button id="pay" class="btn-pay" type="button">
-                    <span>Оплатить и начать</span>
+                    <span>Согласиться</span>
                 </button>
                 <div id="msg" class="message-box hidden" role="alert"></div>
             </div>
+
         </div>
     </div>
 </div>

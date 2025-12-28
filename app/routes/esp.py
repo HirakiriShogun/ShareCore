@@ -1,7 +1,7 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, current_app
 from datetime import datetime, timedelta
 
-from app.models import Device, Order
+from app.models import Device, Order, schedule_activation, clear_expired_activation
 from app.db import db
 from app.integrations import alfa_bank
 from app.integrations.alfa_bank import AlfaBankError
@@ -20,19 +20,23 @@ def esp_poll(uid):
 
     # Авто-очистка если активация просрочена
     if d.relay_state and d.active_until and d.active_until <= now:
-        d.relay_state = False
-        d.active_until = None
+        clear_expired_activation(d, now=now)
 
     # НОВОЕ: Проверяем зависшие платежи для этого устройства
     _check_pending_payments_for_device(d)
 
     remaining = 0
+    relay_on = False
     if d.relay_state and d.active_until and d.active_until > now:
         remaining = int((d.active_until - now).total_seconds())
+        if d.relay_start_at and d.relay_start_at > now:
+            relay_on = False
+        else:
+            relay_on = True
 
     db.session.commit()
     return jsonify({
-        "relay": "on" if d.relay_state else "off",
+        "relay": "on" if relay_on else "off",
         "remaining": remaining
     })
 
@@ -73,7 +77,7 @@ def _check_pending_payments_for_device(device):
         if status == "succeeded" and order.payment_status != "succeeded":
             order.payment_status = "succeeded"
             if device.is_active and order.minutes:
-                device.relay_state = True
-                device.active_until = now + timedelta(minutes=order.minutes)
+                delay_seconds = int(current_app.config.get("RELAY_DELAY_SECONDS", 0) or 0)
+                schedule_activation(device, order.minutes, now=now, delay_seconds=delay_seconds)
         elif status == "canceled" and order.payment_status != "canceled":
             order.payment_status = "canceled"

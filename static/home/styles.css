@@ -2,6 +2,7 @@
 :root {
     --bg: #0F1115;
     --bg-2: #0B1220;
+    --bg-3: #0B101C;
     --card: #121722;
     --field: #162132;
     --text: #EAF3FF;
@@ -18,6 +19,8 @@
     --radius-sm: 12px;
     --shadow: 0 8px 28px rgba(14, 30, 64, .45);
     --transition: all 0.3s ease;
+    --font-body: 'Manrope', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    --font-display: 'Unbounded', 'Manrope', system-ui, sans-serif;
 }
 
 /* ===== Base Styles ===== */
@@ -32,8 +35,11 @@ html {
 }
 
 body {
-    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: radial-gradient(circle at top left, #101626, #0B0F18 70%);
+    font-family: var(--font-body);
+    background:
+        radial-gradient(circle at 10% 10%, rgba(59, 167, 255, 0.15), transparent 45%),
+        radial-gradient(circle at 90% 20%, rgba(76, 201, 240, 0.14), transparent 45%),
+        linear-gradient(180deg, #0C111B 0%, #090D16 100%);
     color: var(--text);
     overflow-x: hidden;
     line-height: 1.6;
@@ -65,6 +71,7 @@ body {
 .logo {
     font-weight: 700;
     font-size: 1.5rem;
+    font-family: var(--font-display);
     color: #fff;
     background: linear-gradient(135deg, var(--accent), var(--cyan));
     -webkit-background-clip: text;
@@ -261,9 +268,12 @@ body {
 .hero-content {
     position: relative;
     z-index: 1;
-    text-align: center;
-    max-width: 900px;
+    width: 100%;
+    max-width: 1200px;
     margin: 0 auto;
+    display: grid;
+    gap: 48px;
+    align-items: center;
 }
 
 .hero-content--centered {
@@ -272,10 +282,22 @@ body {
     align-items: center;
 }
 
+.hero-content--split {
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr);
+    text-align: left;
+}
+
+.hero-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
 .hero-title {
     font-size: 3.5rem;
     font-weight: 700;
     margin-bottom: 24px;
+    font-family: var(--font-display);
     background: linear-gradient(135deg, #fff, var(--cyan));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -306,12 +328,20 @@ body {
     flex-wrap: wrap;
 }
 
+.hero-content--split .hero-buttons {
+    justify-content: flex-start;
+}
+
 .hero-meta {
     display: flex;
     justify-content: center;
     gap: 20px;
     flex-wrap: wrap;
     margin-top: 40px;
+}
+
+.hero-content--split .hero-meta {
+    justify-content: flex-start;
 }
 
 .hero-meta-card {
@@ -336,6 +366,101 @@ body {
     color: var(--muted);
     font-size: 0.95rem;
     margin-top: 4px;
+}
+
+.hero-visual {
+    position: relative;
+    min-height: 360px;
+    display: grid;
+    place-items: center;
+    gap: 16px;
+}
+
+.hero-orb {
+    width: min(70vw, 320px);
+    height: min(70vw, 320px);
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.7), transparent 40%),
+        radial-gradient(circle at 70% 70%, rgba(59, 167, 255, 0.45), transparent 55%),
+        radial-gradient(circle at 50% 50%, rgba(12, 17, 28, 0.9), rgba(8, 12, 20, 0.95));
+    box-shadow:
+        0 0 40px rgba(59, 167, 255, 0.35),
+        inset 0 0 40px rgba(255, 255, 255, 0.08);
+    animation: orbFloat 12s ease-in-out infinite;
+    z-index: 0;
+}
+
+.hero-ring {
+    position: absolute;
+    width: min(78vw, 360px);
+    height: min(78vw, 360px);
+    border-radius: 50%;
+    border: 1px solid rgba(59, 167, 255, 0.35);
+    box-shadow: 0 0 40px rgba(59, 167, 255, 0.18);
+    transform: rotateX(65deg) rotateZ(12deg);
+    animation: ringSpin 18s linear infinite;
+    z-index: 1;
+}
+
+.hero-card {
+    position: absolute;
+    padding: 14px 18px;
+    border-radius: 14px;
+    background: rgba(15, 20, 34, 0.85);
+    border: 1px solid rgba(153, 171, 208, 0.2);
+    box-shadow: 0 16px 40px rgba(4, 10, 20, 0.45);
+    backdrop-filter: blur(12px);
+    min-width: 150px;
+    display: grid;
+    gap: 4px;
+    z-index: 2;
+}
+
+.hero-card--a {
+    top: 6%;
+    left: 0;
+    transform: translateX(-8%);
+}
+
+.hero-card--b {
+    bottom: 6%;
+    right: 0;
+    transform: translateX(8%);
+}
+
+.hero-card--c {
+    top: 50%;
+    right: 14%;
+    transform: translateY(-50%);
+}
+
+.hero-card__label {
+    font-size: 11px;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+.hero-card__value {
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+}
+
+.hero-card__desc {
+    font-size: 12px;
+    color: var(--accent-strong);
+}
+
+@keyframes orbFloat {
+    0%, 100% { transform: translateY(0) scale(1); }
+    50% { transform: translateY(-10px) scale(1.02); }
+}
+
+@keyframes ringSpin {
+    0% { transform: rotateX(65deg) rotateZ(0deg); }
+    100% { transform: rotateX(65deg) rotateZ(360deg); }
 }
 
 /* ===== Buttons ===== */
@@ -428,6 +553,7 @@ body {
     font-weight: 700;
     text-align: center;
     margin-bottom: 20px;
+    font-family: var(--font-display);
     background: linear-gradient(135deg, #fff, var(--cyan));
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -1014,6 +1140,7 @@ body {
     font-size: 1.05rem;
     font-weight: 600;
     color: var(--text);
+    word-break: break-word;
 }
 
 .contact-panel a {
@@ -1239,6 +1366,43 @@ body {
     background: url("data:image/svg+xml,%3Csvg width='14' height='14' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M21.4 4.2L2.9 11.5c-.8.3-.8 1.4 0 1.6l4.6 1.4 1.8 5.6c.2.7 1.1.9 1.6.4l2.6-2.5 4.5 3.3c.6.4 1.4.1 1.6-.6l2.7-15.5c.2-.8-.6-1.4-1.5-1.1z' fill='%234CC9F0'/%3E%3C/svg%3E") no-repeat center/contain;
 }
 
+@media (max-width: 980px) {
+    .hero-content--split {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .hero-text {
+        align-items: center;
+    }
+
+    .hero-content--split .hero-buttons,
+    .hero-content--split .hero-meta {
+        justify-content: center;
+    }
+
+    .hero-visual {
+        order: -1;
+        min-height: 300px;
+    }
+
+    .hero-card--a,
+    .hero-card--b,
+    .hero-card--c {
+        position: static;
+        transform: none;
+    }
+
+    .hero-visual {
+        gap: 12px;
+    }
+
+    .hero-card {
+        width: min(90%, 280px);
+        justify-self: center;
+    }
+}
+
 /* ===== Mobile Responsive ===== */
 @media (max-width: 768px) {
     .site-header {
@@ -1406,6 +1570,14 @@ body {
 
     .doc-link {
         padding: 16px 20px;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bg-blob,
+    .hero-orb,
+    .hero-ring {
+        animation: none;
     }
 }
 

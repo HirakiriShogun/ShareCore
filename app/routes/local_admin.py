@@ -1,17 +1,22 @@
 # app/routes/local_admin.py
 from datetime import datetime, timedelta
-from flask import Blueprint, abort, render_template, request, jsonify, session, send_file, url_for
+from flask import Blueprint, abort, render_template, request, jsonify, session, send_file, url_for, current_app
 from flask_login import login_required, current_user
 from app.db import db
-from app.models import Device, User
-from app.models import Order
+from app.models import Device, User, Order, ClientConsent, schedule_activation, clear_expired_activation
 from sqlalchemy.exc import IntegrityError
-from datetime import datetime
 
 bp = Blueprint("local_admin", __name__)
 
 def is_local():  return current_user.is_authenticated and current_user.role == "localadmin"
 def is_worker(): return current_user.is_authenticated and current_user.role == "worker"
+def can_control(): return current_user.is_authenticated and current_user.role in ("localadmin", "worker")
+def owner_id_for_user():
+    if is_local():
+        return current_user.id
+    if is_worker():
+        return current_user.parent_id
+    return None
 
 # -------- Pages --------
 @bp.route("/")
@@ -48,8 +53,15 @@ def devices_edit_page(did):
 def worker_page():
     if not (is_local() or is_worker()):
         abort(403)
-    can_control = is_local()
-    return render_template("local/worker.html", can_control=can_control)
+    return render_template("local/worker.html")
+
+
+@bp.route("/worker/device/<int:did>")
+@login_required
+def worker_device_page(did):
+    if not (is_local() or is_worker()):
+        abort(403)
+    return render_template("local/worker_device.html", did=did)
 
 @bp.route("/stats")
 @login_required
@@ -376,23 +388,13 @@ def api_device_toggle(did):
     return jsonify({"ok": True, "is_active": d.is_active})
 
 # -------- Worker status / bulk --------
-def _owner_id_for_status():
-    if is_local():
-        return current_user.id
-    if is_worker():
-        return current_user.parent_id
-    return None
-
 @bp.route("/api/worker/status")
 @login_required
 def api_worker_status():
     if current_user.role not in ("localadmin", "worker"):
         return jsonify({"error": "forbidden"}), 403
 
-    if current_user.role == "localadmin":
-        owner_id = current_user.id
-    else:  # worker
-        owner_id = current_user.parent_id
+    owner_id = owner_id_for_user()
 
     if not owner_id:
         return jsonify([])
@@ -404,12 +406,14 @@ def api_worker_status():
     out = []
     for d in rows:
         remaining = 0
+        starts_in = 0
         if d.relay_state and d.active_until:
             if d.active_until > now:
                 remaining = int((d.active_until - now).total_seconds())
+                if d.relay_start_at and d.relay_start_at > now:
+                    starts_in = int((d.relay_start_at - now).total_seconds())
             else:
-                d.relay_state = False
-                d.active_until = None
+                clear_expired_activation(d, now=now)
         out.append({
             "id": d.id,
             "uid": d.device_uid,
@@ -417,12 +421,153 @@ def api_worker_status():
             "is_active": d.is_active,
             "relay_state": d.relay_state,
             "remaining_seconds": remaining,
+            "starts_in_seconds": starts_in,
             "last_seen_at": d.last_seen_at.isoformat()+"Z" if d.last_seen_at else None,
             "online": is_online(d)
         })
 
     db.session.commit()
     return jsonify(out)
+
+
+@bp.route("/api/worker/device/<int:did>", methods=["GET"])
+@login_required
+def api_worker_device(did):
+    if not can_control():
+        return jsonify({"error": "forbidden"}), 403
+
+    owner_id = owner_id_for_user()
+    if not owner_id:
+        return jsonify({"error": "forbidden"}), 403
+
+    now = datetime.utcnow()
+    from app.models import is_online
+    d = Device.query.filter_by(id=did, owner_id=owner_id).first()
+    if not d:
+        return jsonify({"error": "not found"}), 404
+
+    remaining = 0
+    starts_in = 0
+    if d.relay_state and d.active_until:
+        if d.active_until > now:
+            remaining = int((d.active_until - now).total_seconds())
+            if d.relay_start_at and d.relay_start_at > now:
+                starts_in = int((d.relay_start_at - now).total_seconds())
+        else:
+            clear_expired_activation(d, now=now)
+            db.session.commit()
+
+    return jsonify({
+        "id": d.id,
+        "uid": d.device_uid,
+        "name": d.name,
+        "is_active": d.is_active,
+        "relay_state": d.relay_state,
+        "remaining_seconds": remaining,
+        "starts_in_seconds": starts_in,
+        "online": is_online(d),
+        "allowed_minutes": d.allowed_minutes or None,
+    })
+
+
+@bp.route("/api/worker/device/<int:did>/start", methods=["POST"])
+@login_required
+def api_worker_device_start(did):
+    if not can_control():
+        return jsonify({"error": "forbidden"}), 403
+
+    owner_id = owner_id_for_user()
+    if not owner_id:
+        return jsonify({"error": "forbidden"}), 403
+
+    payload = request.get_json(force=True) or {}
+    minutes = int(payload.get("minutes") or 0)
+    if minutes <= 0 or minutes > 720:
+        return jsonify({"error": "bad_input"}), 400
+
+    now = datetime.utcnow()
+    from app.models import is_online
+    d = Device.query.filter_by(id=did, owner_id=owner_id).first()
+    if not d or not d.is_active:
+        return jsonify({"error": "not found"}), 404
+    if not is_online(d):
+        return jsonify({"error": "device_offline"}), 409
+
+    if d.relay_state and d.active_until and d.active_until > now:
+        remaining = int((d.active_until - now).total_seconds())
+        return jsonify({"error": "busy", "remaining_seconds": remaining}), 409
+
+    if d.allowed_minutes:
+        try:
+            normalize = sorted({int(x) for x in d.allowed_minutes})
+        except Exception:
+            normalize = None
+        if normalize and minutes not in normalize:
+            return jsonify({"error": "minutes_not_allowed"}), 400
+
+    delay_seconds = int(current_app.config.get("RELAY_DELAY_SECONDS", 0) or 0)
+    schedule_activation(d, minutes, now=now, delay_seconds=delay_seconds)
+
+    amount = int(d.price_per_minute or 0) * minutes
+    db.session.add(Order(
+        amount=amount,
+        currency="RUB",
+        device_id=d.device_uid or str(d.id),
+        device_table_id=d.id,
+        minutes=minutes,
+        payment_status="succeeded"
+    ))
+
+    db.session.commit()
+    return jsonify({"ok": True, "until": d.active_until.isoformat() + "Z"})
+
+
+@bp.route("/api/worker/device/<int:did>/stop", methods=["POST"])
+@login_required
+def api_worker_device_stop(did):
+    if not can_control():
+        return jsonify({"error": "forbidden"}), 403
+
+    owner_id = owner_id_for_user()
+    if not owner_id:
+        return jsonify({"error": "forbidden"}), 403
+
+    d = Device.query.filter_by(id=did, owner_id=owner_id).first()
+    if not d:
+        return jsonify({"error": "not found"}), 404
+
+    d.relay_state = False
+    d.active_until = None
+    d.relay_start_at = None
+    db.session.commit()
+    return jsonify({"ok": True})
+
+
+@bp.route("/consents")
+@login_required
+def consents_page():
+    if not is_local():
+        abort(403)
+    return render_template("local/consents.html")
+
+
+@bp.route("/api/consents", methods=["GET"])
+@login_required
+def api_consents_list():
+    if not is_local():
+        abort(403)
+
+    rows = ClientConsent.query.filter_by(owner_id=current_user.id).order_by(ClientConsent.id.desc()).limit(500).all()
+    data = []
+    for row in rows:
+        data.append({
+            "id": row.id,
+            "date": row.consent_date.isoformat() if row.consent_date else "",
+            "time": row.consent_time.strftime("%H:%M:%S") if row.consent_time else "",
+            "email": row.email,
+            "agreed": bool(row.agreed),
+        })
+    return jsonify(data)
 
 # bulk power endpoint removed by requirement
 

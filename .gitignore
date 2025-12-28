@@ -25,3 +25,5 @@ Thumbs.db
 
 # Alembic (оставляем версии под контролем)
 # alembic/versions/*.pyc
+
+db_backups/

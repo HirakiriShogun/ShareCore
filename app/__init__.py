@@ -77,6 +77,7 @@ def ensure_schema():
         'ALTER TABLE device ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT TRUE',
         'ALTER TABLE device ADD COLUMN IF NOT EXISTS relay_state BOOLEAN NOT NULL DEFAULT FALSE',
         'ALTER TABLE device ADD COLUMN IF NOT EXISTS active_until TIMESTAMP NULL',
+        'ALTER TABLE device ADD COLUMN IF NOT EXISTS relay_start_at TIMESTAMP NULL',
         'ALTER TABLE device ADD COLUMN IF NOT EXISTS last_seen_at TIMESTAMP NULL',
         'ALTER TABLE device ADD COLUMN IF NOT EXISTS allowed_minutes JSONB',
         """

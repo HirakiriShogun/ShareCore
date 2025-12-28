@@ -1,0 +1,225 @@
+{% extends "local/layout.html" %}
+{% set header_title = 'Устройство' %}
+{% block title %}Устройство{% endblock %}
+{% block local_content %}
+<div class="toolbar">
+    <a class="btn neutral small" href="{{ url_for('local_admin.worker_page') }}">← Назад</a>
+</div>
+
+<div class="device-control" data-device-id="{{ did }}">
+    <div class="device-control-header">
+        <div>
+            <div class="device-control-name" id="device-name">Устройство</div>
+            <div class="device-control-meta" id="device-uid">UID: —</div>
+        </div>
+        <span class="pill off" id="device-status-pill">Выключено</span>
+    </div>
+
+    <div class="device-status-grid">
+        <div class="device-status-item">
+            <span class="device-status-label">Онлайн</span>
+            <span class="device-status-value" id="device-online">—</span>
+        </div>
+        <div class="device-status-item">
+            <span class="device-status-label">Запуск</span>
+            <span class="device-status-value" id="device-starts">—</span>
+        </div>
+        <div class="device-status-item">
+            <span class="device-status-label">Осталось</span>
+            <span class="device-status-value" id="device-remaining">—</span>
+        </div>
+    </div>
+
+    <div class="field">
+        <label class="field__label">Время работы</label>
+        <div class="time-chips" id="minutes-chips"></div>
+    </div>
+
+    <div class="control-actions">
+        <button class="btn" id="start-btn">Включить</button>
+        <button class="btn danger" id="stop-btn">Выключить сейчас</button>
+    </div>
+
+    <div class="message-box hidden" id="device-msg"></div>
+</div>
+
+<script>
+    const $ = s => document.querySelector(s);
+    const deviceId = document.querySelector('[data-device-id]').dataset.deviceId;
+    const nameEl = $('#device-name');
+    const uidEl = $('#device-uid');
+    const onlineEl = $('#device-online');
+    const startsEl = $('#device-starts');
+    const remainingEl = $('#device-remaining');
+    const statusPill = $('#device-status-pill');
+    const chipsContainer = $('#minutes-chips');
+    const startBtn = $('#start-btn');
+    const stopBtn = $('#stop-btn');
+    const msgBox = $('#device-msg');
+
+    let remaining = 0;
+    let startsIn = 0;
+    let selectedMinutes = null;
+    let isOnline = false;
+    let isActive = false;
+    let allowedMinutes = null;
+
+    const formatTime = (seconds) => {
+        if (!seconds || seconds <= 0) return '—';
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    function showMessage(text, kind) {
+        msgBox.textContent = text;
+        msgBox.className = `message-box ${kind || ''}`.trim();
+    }
+
+    function setActiveChip(minutes) {
+        selectedMinutes = minutes;
+        [...chipsContainer.children].forEach(chip => {
+            chip.classList.toggle('active', Number(chip.dataset.min) === minutes);
+        });
+        updateButtons();
+    }
+
+    function renderStatus() {
+        onlineEl.textContent = isOnline ? 'Онлайн' : 'Оффлайн';
+        startsEl.textContent = startsIn > 0 ? formatTime(startsIn) : '—';
+        remainingEl.textContent = startsIn > 0
+            ? '—'
+            : (remaining > 0 ? formatTime(remaining) : '—');
+
+        statusPill.className = 'pill off';
+        statusPill.textContent = 'Выключено';
+        if (isActive) {
+            statusPill.className = 'pill on';
+            statusPill.textContent = 'Включено';
+        } else if (startsIn > 0) {
+            statusPill.className = 'pill wait';
+            statusPill.textContent = 'Запуск';
+        }
+
+        updateButtons();
+    }
+
+    function updateButtons() {
+        const busy = remaining > 0 || startsIn > 0;
+        startBtn.disabled = !isOnline || busy || !selectedMinutes;
+        stopBtn.disabled = !busy;
+    }
+
+    function renderMinutes(options) {
+        const allowed = options && options.length ? options : [5, 10, 15, 30, 60];
+        const normalized = [...new Set(allowed.map(Number))].sort((a, b) => a - b);
+        chipsContainer.innerHTML = normalized
+            .map(min => `<button class="time-chip" data-min="${min}">${min} мин</button>`)
+            .join('');
+
+        const defaultMin = normalized.includes(10) ? 10 : normalized[0];
+        setActiveChip(defaultMin);
+    }
+
+    chipsContainer.addEventListener('click', (event) => {
+        const btn = event.target.closest('button');
+        if (!btn) return;
+        setActiveChip(Number(btn.dataset.min));
+    });
+
+    async function fetchDevice() {
+        try {
+            const r = await fetch(`/local/api/worker/device/${deviceId}`);
+            if (!r.ok) {
+                showMessage('Не удалось загрузить устройство.', 'error');
+                return;
+            }
+
+            const data = await r.json();
+            nameEl.textContent = data.name || 'Устройство';
+            uidEl.textContent = `UID: ${data.uid || '—'}`;
+            isOnline = Boolean(data.online);
+            remaining = Number(data.remaining_seconds || 0);
+            startsIn = Number(data.starts_in_seconds || 0);
+            isActive = Boolean(data.relay_state) && startsIn === 0 && remaining > 0;
+
+            if (!allowedMinutes || JSON.stringify(allowedMinutes) !== JSON.stringify(data.allowed_minutes || [])) {
+                allowedMinutes = data.allowed_minutes || [];
+                renderMinutes(allowedMinutes);
+            }
+
+            renderStatus();
+        } catch (e) {
+            showMessage('Сеть недоступна. Попробуйте позже.', 'error');
+        }
+    }
+
+    startBtn.addEventListener('click', async () => {
+        if (!selectedMinutes) return;
+        showMessage('', 'hidden');
+        startBtn.disabled = true;
+
+        try {
+            const r = await fetch(`/local/api/worker/device/${deviceId}/start`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ minutes: selectedMinutes })
+            });
+            const data = await r.json();
+            if (!r.ok) {
+                if (data.error === 'busy') {
+                    remaining = Number(data.remaining_seconds || 0);
+                    showMessage('Устройство уже работает.', 'error');
+                } else if (data.error === 'device_offline') {
+                    showMessage('Устройство оффлайн.', 'error');
+                } else if (data.error === 'minutes_not_allowed') {
+                    showMessage('Недоступное время.', 'error');
+                } else {
+                    showMessage('Не удалось включить устройство.', 'error');
+                }
+            } else {
+                showMessage('Команда отправлена. Устройство будет включено.', 'success');
+                await fetchDevice();
+            }
+        } catch (e) {
+            showMessage('Сеть недоступна. Попробуйте позже.', 'error');
+        } finally {
+            updateButtons();
+        }
+    });
+
+    stopBtn.addEventListener('click', async () => {
+        showMessage('', 'hidden');
+        stopBtn.disabled = true;
+        try {
+            const r = await fetch(`/local/api/worker/device/${deviceId}/stop`, { method: 'POST' });
+            if (!r.ok) {
+                showMessage('Не удалось выключить устройство.', 'error');
+            } else {
+                remaining = 0;
+                startsIn = 0;
+                isActive = false;
+                showMessage('Устройство выключено.', 'success');
+                await fetchDevice();
+            }
+        } catch (e) {
+            showMessage('Сеть недоступна. Попробуйте позже.', 'error');
+        } finally {
+            updateButtons();
+        }
+    });
+
+    setInterval(() => {
+        if (startsIn > 0) {
+            startsIn = Math.max(0, startsIn - 1);
+        }
+        if (remaining > 0) {
+            remaining = Math.max(0, remaining - 1);
+        }
+        renderStatus();
+    }, 1000);
+
+    fetchDevice();
+    setInterval(fetchDevice, 2000);
+</script>
+{% endblock %}

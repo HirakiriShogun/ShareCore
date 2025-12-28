@@ -11,6 +11,16 @@ def _env_bool(key: str, default: bool = False) -> bool:
     return raw.strip().lower() in {"1", "true", "yes", "on"}
 
 
+def _env_int(key: str, default: int) -> int:
+    raw = os.environ.get(key)
+    if raw is None:
+        return default
+    try:
+        return int(raw.strip())
+    except ValueError:
+        return default
+
+
 class Config:
     SECRET_KEY = os.environ.get("SECRET_KEY", "devkey")
     SQLALCHEMY_DATABASE_URI = os.environ.get(
@@ -31,3 +41,4 @@ class Config:
 
     # Feature flags
     PAYMENTS_DISABLED = _env_bool("PAYMENTS_DISABLED", True)
+    RELAY_DELAY_SECONDS = _env_int("RELAY_DELAY_SECONDS", 7)

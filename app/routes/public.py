@@ -1,22 +1,25 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Optional
 
 from flask import Blueprint, render_template, request, jsonify, redirect, url_for, current_app
 from app.db import db
-from app.models import User, Device, Order, is_online
+from app.models import User, Device, Order, ClientConsent, is_online, schedule_activation, clear_expired_activation
 from flask_login import login_user, logout_user, login_required, current_user
 from app.integrations import alfa_bank
 from app.integrations.alfa_bank import AlfaBankError
-import uuid
 
 bp = Blueprint("public", __name__)
 
 
 def _activate_device(device: Device, minutes: int, *, now: Optional[datetime] = None) -> datetime:
     now = now or datetime.utcnow()
-    device.relay_state = True
-    device.active_until = now + timedelta(minutes=minutes)
+    delay_seconds = int(current_app.config.get("RELAY_DELAY_SECONDS", 0) or 0)
+    schedule_activation(device, minutes, now=now, delay_seconds=delay_seconds)
     return device.active_until
+
+
+def _is_control_user() -> bool:
+    return bool(current_user.is_authenticated and current_user.role in ("worker", "localadmin", "superadmin"))
 
 
 def _refresh_order_state(order: Order, *, device: Optional[Device] = None):
@@ -119,7 +122,9 @@ def public_device(uid):
 # ---------- API: список всех активных устройств ----------
 @bp.route("/api/devices", methods=["GET"])
 def api_devices_list():
-    """Возвращает список всех активных устройств для витрины на главной странице"""
+    """Возвращает список активных устройств для внутренних панелей"""
+    if not _is_control_user():
+        return jsonify({"error": "forbidden"}), 403
     now = datetime.utcnow()
     
     # Получаем только активные устройства от активных владельцев
@@ -138,8 +143,7 @@ def api_devices_list():
             if d.active_until > now:
                 remaining = int((d.active_until - now).total_seconds())
             else:
-                d.relay_state = False
-                d.active_until = None
+                clear_expired_activation(d, now=now)
                 db.session.commit()
         
         default_minutes = [5, 10, 15, 30, 60]
@@ -169,8 +173,7 @@ def api_public_device(uid):
         if d.active_until > now:
             remaining = int((d.active_until - now).total_seconds())
         else:
-            d.relay_state = False
-            d.active_until = None
+            clear_expired_activation(d, now=now)
             db.session.commit()
 
     default_minutes = [5, 10, 15, 30, 60]
@@ -188,6 +191,8 @@ def api_public_device(uid):
 # ---------- API: эмуляция оплаты / запуск активации ----------
 @bp.route("/api/rent", methods=["POST"])
 def api_public_rent():
+    if not _is_control_user():
+        return jsonify({"error": "forbidden"}), 403
     p = request.get_json(force=True) or {}
     minutes = int(p.get("minutes") or 0)
     if minutes <= 0 or minutes > 720:
@@ -248,6 +253,8 @@ def api_public_rent():
 # ---------- API: создание платежа через Альфа-Банк ----------
 @bp.route("/api/payment/create", methods=["POST"])
 def api_create_payment():
+    if not _is_control_user():
+        return jsonify({"error": "forbidden"}), 403
     if current_app.config.get("PAYMENTS_DISABLED"):
         return jsonify({
             "error": "acquiring_disabled",
@@ -441,3 +448,40 @@ def payment_callback():
             response["message"] = message
 
     return jsonify(response), 200
+
+
+@bp.route("/api/consent", methods=["POST"])
+def api_client_consent():
+    payload = request.get_json(force=True) or {}
+    uid = (payload.get("device_uid") or "").strip()
+    email = (payload.get("email") or "").strip().lower()
+    agreed = bool(payload.get("agreed"))
+
+    if not uid or not email:
+        return jsonify({"error": "bad_input"}), 400
+    if "@" not in email or len(email) > 120:
+        return jsonify({"error": "bad_email"}), 400
+    if not agreed:
+        return jsonify({"error": "consent_required"}), 400
+
+    device = Device.query.filter_by(device_uid=uid, is_active=True).first()
+    if not device:
+        return jsonify({"error": "device_unavailable"}), 404
+
+    owner = User.query.get(device.owner_id) if device.owner_id else None
+    if not owner or owner.role != "localadmin" or not owner.is_enabled:
+        return jsonify({"error": "device_unavailable"}), 404
+
+    now = datetime.utcnow()
+    consent = ClientConsent(
+        owner_id=owner.id,
+        device_id=device.id,
+        consent_date=now.date(),
+        consent_time=now.time().replace(microsecond=0),
+        email=email,
+        agreed=True,
+    )
+    db.session.add(consent)
+    db.session.commit()
+
+    return jsonify({"ok": True})
