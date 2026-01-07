@@ -1,249 +1,249 @@
-{% extends "local/layout.html" %}
-{% set header_title = 'Панель работника' %}
-{% block title %}Панель работника{% endblock %}
-{% block local_content %}
-<div class="toolbar">
-    <a class="btn neutral small"
-        href="{{ url_for('local_admin.dashboard') if current_user.role == 'localadmin' else url_for('public.logout') }}">← Назад</a>
-</div>
-
-<div class="device-picker">
-    <div class="field">
-        <label class="field__label" for="device-select">Выберите устройство</label>
-        <div class="device-picker-row">
-            <select class="field__select" id="device-select"></select>
-            <button class="btn small" id="open-device">Открыть</button>
-        </div>
-    </div>
-</div>
-
-<h2 class="section-title">Статусы устройств</h2>
-<div id="list" class="grid"></div>
-<div id="empty-state" class="message-box hidden" style="text-align: center; color: var(--muted);">
-    Нет активных устройств
-</div>
-
-<style>
-    .device-status-card {
-        position: relative;
-        padding: 16px;
-        border-radius: 14px;
-        background: linear-gradient(180deg, rgba(18, 23, 34, .60), rgba(18, 23, 34, .75));
-        box-shadow: 0 6px 20px rgba(14, 30, 64, .30), 0 0 0 1px rgba(153, 171, 208, .12);
-    }
-
-    .device-status-card::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        border-radius: inherit;
-        padding: 1px;
-        background: linear-gradient(135deg, rgba(var(--accent-rgb), .35), rgba(76, 201, 240, .25));
-        -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-        mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
-        -webkit-mask-composite: xor;
-        mask-composite: exclude;
-        pointer-events: none;
-    }
-
-    .device-status-header {
-        position: relative;
-        z-index: 1;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 12px;
-    }
-
-    .device-status-name {
-        font-weight: 700;
-        font-size: 18px;
-        letter-spacing: .2px;
-        background: linear-gradient(90deg, var(--accent-soft), var(--accent));
-        -webkit-background-clip: text;
-        background-clip: text;
-        color: transparent;
-    }
-
-    .device-status-info {
-        position: relative;
-        z-index: 1;
-    }
-
-    .device-status-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 6px 0;
-        font-size: 14px;
-    }
-
-    .device-status-label {
-        color: var(--muted);
-    }
-
-    .device-status-value {
-        color: var(--text);
-        font-weight: 600;
-    }
-
-    .timer-display {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 14px;
-        border-radius: 10px;
-        background: rgba(var(--accent-rgb), .15);
-        border: 1px solid rgba(var(--accent-rgb), .3);
-        margin-top: 10px;
-    }
-
-    .timer-label {
-        font-size: 13px;
-        color: var(--muted);
-    }
-
-    .timer-value {
-        font-size: 20px;
-        font-weight: 800;
-        font-variant-numeric: tabular-nums;
-        color: var(--accent-soft);
-    }
-</style>
-
-<script>
-    const $ = s => document.querySelector(s);
-
-    const selectEl = $('#device-select');
-    const openBtn = $('#open-device');
-
-    const formatTime = (seconds) => {
-        const mins = Math.floor(seconds / 60);
-        const secs = seconds % 60;
-        return `${mins}:${secs.toString().padStart(2, '0')}`;
-    };
-
-    function deviceStatusCard(dev) {
-        const onlineIndicator = dev.online
-            ? '<span class="status-dot on" title="Онлайн"></span> Онлайн'
-            : '<span class="status-dot off" title="Оффлайн"></span> Оффлайн';
-
-        let statusPill = '<span class="pill off">Выключено</span>';
-        if (dev.relay_state && dev.remaining_seconds > 0) {
-            statusPill = dev.starts_in_seconds > 0
-                ? '<span class="pill wait">Запуск</span>'
-                : '<span class="pill on">Включено</span>';
-        }
-
-        let timerHtml = '';
-        if (dev.starts_in_seconds > 0) {
-            timerHtml = `
-                <div class="timer-display">
-                    <span class="timer-label">Запуск через:</span>
-                    <span class="timer-value">${formatTime(dev.starts_in_seconds)}</span>
-                </div>
-            `;
-        } else if (dev.relay_state && dev.remaining_seconds > 0) {
-            timerHtml = `
-                <div class="timer-display">
-                    <span class="timer-label">Осталось:</span>
-                    <span class="timer-value">${formatTime(dev.remaining_seconds)}</span>
-                </div>
-            `;
-        }
-
-        return `
-            <div class="device-status-card" data-id="${dev.id}">
-                <div class="device-status-header">
-                    <div class="device-status-name">${dev.name}</div>
-                    ${statusPill}
-                </div>
-                <div class="device-status-info">
-                    <div class="device-status-row">
-                        <span class="device-status-label">UID:</span>
-                        <span class="device-status-value">${dev.uid || '-'}</span>
-                    </div>
-                    <div class="device-status-row">
-                        <span class="device-status-label">Статус:</span>
-                        <span class="device-status-value">${onlineIndicator}</span>
-                    </div>
-                    ${timerHtml}
-                </div>
-            </div>
-        `;
-    }
-
-    function fillPicker(devices) {
-        if (!selectEl || !openBtn) return;
-
-        if (!devices.length) {
-            selectEl.innerHTML = '<option value="">Нет доступных устройств</option>';
-            selectEl.disabled = true;
-            openBtn.disabled = true;
-            return;
-        }
-
-        const current = selectEl.value;
-        selectEl.innerHTML = devices.map(dev => {
-            const state = !dev.online
-                ? 'оффлайн'
-                : dev.starts_in_seconds > 0
-                    ? `запуск ${formatTime(dev.starts_in_seconds)}`
-                    : dev.relay_state && dev.remaining_seconds > 0
-                        ? `включено ${formatTime(dev.remaining_seconds)}`
-                        : 'выключено';
-            return `<option value="${dev.id}">${dev.name} · ${state}</option>`;
-        }).join('');
-
-        if (current) {
-            selectEl.value = current;
-        }
-
-        selectEl.disabled = false;
-        openBtn.disabled = false;
-    }
-
-    async function poll() {
-        try {
-            const r = await fetch('/local/api/worker/status');
-            if (!r.ok) return;
-
-            const data = await r.json();
-            const listEl = $('#list');
-            const emptyEl = $('#empty-state');
-
-            fillPicker(data);
-
-            if (data.length === 0) {
-                listEl.innerHTML = '';
-                emptyEl.classList.remove('hidden');
-                return;
-            }
-
-            emptyEl.classList.add('hidden');
-            listEl.innerHTML = '';
-
-            data.forEach(dev => {
-                const wrapper = document.createElement('div');
-                wrapper.innerHTML = deviceStatusCard(dev);
-                const card = wrapper.firstElementChild;
-                listEl.appendChild(card);
-            });
-        } catch (e) {
-            console.error('Ошибка загрузки:', e);
-        }
-    }
-
-    if (openBtn && selectEl) {
-        openBtn.addEventListener('click', () => {
-            const value = selectEl.value;
-            if (value) {
-                window.location.href = `/local/worker/device/${value}`;
-            }
-        });
-    }
-
-    poll();
-    setInterval(poll, 2000);
-</script>
+{% extends "local/layout.html" %}
+{% set header_title = 'Панель сотрудника' %}
+{% block title %}Панель сотрудника{% endblock %}
+{% block local_content %}
+<div class="toolbar">
+    <a class="btn neutral small"
+        href="{{ url_for('local_admin.dashboard') if current_user.role == 'localadmin' else url_for('public.logout') }}">← Назад</a>
+</div>
+
+<div class="device-picker">
+    <div class="field">
+        <label class="field__label" for="device-select">Выберите устройство</label>
+        <div class="device-picker-row">
+            <select class="field__select" id="device-select"></select>
+            <button class="btn small" id="open-device">Открыть</button>
+        </div>
+    </div>
+</div>
+
+<h2 class="section-title">Статусы устройств</h2>
+<div id="list" class="grid"></div>
+<div id="empty-state" class="message-box hidden" style="text-align: center; color: var(--muted);">
+    Нет активных устройств
+</div>
+
+<style>
+    .device-status-card {
+        position: relative;
+        padding: 16px;
+        border-radius: 14px;
+        background: linear-gradient(180deg, rgba(18, 23, 34, .60), rgba(18, 23, 34, .75));
+        box-shadow: 0 6px 20px rgba(14, 30, 64, .30), 0 0 0 1px rgba(153, 171, 208, .12);
+    }
+
+    .device-status-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(135deg, rgba(var(--accent-rgb), .35), rgba(76, 201, 240, .25));
+        -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+        mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        pointer-events: none;
+    }
+
+    .device-status-header {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+    }
+
+    .device-status-name {
+        font-weight: 700;
+        font-size: 18px;
+        letter-spacing: .2px;
+        background: linear-gradient(90deg, var(--accent-soft), var(--accent));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+    }
+
+    .device-status-info {
+        position: relative;
+        z-index: 1;
+    }
+
+    .device-status-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 6px 0;
+        font-size: 14px;
+    }
+
+    .device-status-label {
+        color: var(--muted);
+    }
+
+    .device-status-value {
+        color: var(--text);
+        font-weight: 600;
+    }
+
+    .timer-display {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border-radius: 10px;
+        background: rgba(var(--accent-rgb), .15);
+        border: 1px solid rgba(var(--accent-rgb), .3);
+        margin-top: 10px;
+    }
+
+    .timer-label {
+        font-size: 13px;
+        color: var(--muted);
+    }
+
+    .timer-value {
+        font-size: 20px;
+        font-weight: 800;
+        font-variant-numeric: tabular-nums;
+        color: var(--accent-soft);
+    }
+</style>
+
+<script>
+    const $ = s => document.querySelector(s);
+
+    const selectEl = $('#device-select');
+    const openBtn = $('#open-device');
+
+    const formatTime = (seconds) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    function deviceStatusCard(dev) {
+        const onlineIndicator = dev.online
+            ? '<span class="status-dot on" title="Онлайн"></span> Онлайн'
+            : '<span class="status-dot off" title="Оффлайн"></span> Оффлайн';
+
+        let statusPill = '<span class="pill off">Выключено</span>';
+        if (dev.relay_state && dev.remaining_seconds > 0) {
+            statusPill = dev.starts_in_seconds > 0
+                ? '<span class="pill wait">Запуск</span>'
+                : '<span class="pill on">Включено</span>';
+        }
+
+        let timerHtml = '';
+        if (dev.starts_in_seconds > 0) {
+            timerHtml = `
+                <div class="timer-display">
+                    <span class="timer-label">Запуск через:</span>
+                    <span class="timer-value">${formatTime(dev.starts_in_seconds)}</span>
+                </div>
+            `;
+        } else if (dev.relay_state && dev.remaining_seconds > 0) {
+            timerHtml = `
+                <div class="timer-display">
+                    <span class="timer-label">Осталось:</span>
+                    <span class="timer-value">${formatTime(dev.remaining_seconds)}</span>
+                </div>
+            `;
+        }
+
+        return `
+            <div class="device-status-card" data-id="${dev.id}">
+                <div class="device-status-header">
+                    <div class="device-status-name">${dev.name}</div>
+                    ${statusPill}
+                </div>
+                <div class="device-status-info">
+                    <div class="device-status-row">
+                        <span class="device-status-label">UID:</span>
+                        <span class="device-status-value">${dev.uid || '-'}</span>
+                    </div>
+                    <div class="device-status-row">
+                        <span class="device-status-label">Статус:</span>
+                        <span class="device-status-value">${onlineIndicator}</span>
+                    </div>
+                    ${timerHtml}
+                </div>
+            </div>
+        `;
+    }
+
+    function fillPicker(devices) {
+        if (!selectEl || !openBtn) return;
+
+        if (!devices.length) {
+            selectEl.innerHTML = '<option value="">Нет доступных устройств</option>';
+            selectEl.disabled = true;
+            openBtn.disabled = true;
+            return;
+        }
+
+        const current = selectEl.value;
+        selectEl.innerHTML = devices.map(dev => {
+            const state = !dev.online
+                ? 'оффлайн'
+                : dev.starts_in_seconds > 0
+                    ? `запуск ${formatTime(dev.starts_in_seconds)}`
+                    : dev.relay_state && dev.remaining_seconds > 0
+                        ? `включено ${formatTime(dev.remaining_seconds)}`
+                        : 'выключено';
+            return `<option value="${dev.id}">${dev.name} · ${state}</option>`;
+        }).join('');
+
+        if (current) {
+            selectEl.value = current;
+        }
+
+        selectEl.disabled = false;
+        openBtn.disabled = false;
+    }
+
+    async function poll() {
+        try {
+            const r = await fetch('/local/api/worker/status');
+            if (!r.ok) return;
+
+            const data = await r.json();
+            const listEl = $('#list');
+            const emptyEl = $('#empty-state');
+
+            fillPicker(data);
+
+            if (data.length === 0) {
+                listEl.innerHTML = '';
+                emptyEl.classList.remove('hidden');
+                return;
+            }
+
+            emptyEl.classList.add('hidden');
+            listEl.innerHTML = '';
+
+            data.forEach(dev => {
+                const wrapper = document.createElement('div');
+                wrapper.innerHTML = deviceStatusCard(dev);
+                const card = wrapper.firstElementChild;
+                listEl.appendChild(card);
+            });
+        } catch (e) {
+            console.error('Ошибка загрузки:', e);
+        }
+    }
+
+    if (openBtn && selectEl) {
+        openBtn.addEventListener('click', () => {
+            const value = selectEl.value;
+            if (value) {
+                window.location.href = `/local/worker/device/${value}`;
+            }
+        });
+    }
+
+    poll();
+    setInterval(poll, 2000);
+</script>
 {% endblock %}

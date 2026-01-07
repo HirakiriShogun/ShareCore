@@ -1,113 +1,113 @@
-{% extends "local/layout.html" %}
-{% set header_title = 'Мои устройства' %}
-{% block title %}Мои устройства{% endblock %}
-{% block local_content %}
-<div class="toolbar">
-    <a class="btn neutral small" href="{{ url_for('local_admin.dashboard') }}">← Назад</a>
-    <a class="btn small" href="{{ url_for('local_admin.devices_new_page') }}">+ Добавить устройство</a>
-</div>
-
-<h2 class="section-title">Устройства</h2>
-<div id="list" class="grid"></div>
-<div id="empty-state" class="message-box hidden" style="text-align: center; color: var(--muted);">
-    Нет устройств. Добавьте первое устройство!
-</div>
-
-<script>
-    const $ = s => document.querySelector(s);
-    const api = (u, opt = {}) => fetch(u, { headers: { 'Content-Type': 'application/json' }, ...opt });
-    const rub = v => (v / 100).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-    function deviceCard(d) {
-        const statusPill = d.is_active
-            ? '<span class="pill on">Видно работнику</span>'
-            : '<span class="pill off">Скрыто от работника</span>';
-        const toggleLabel = d.is_active ? 'Скрыть' : 'Показать';
-        const toggleClass = d.is_active ? 'neutral' : '';
-
-        const onlineIndicator = d.online
-            ? '<span class="status-dot on" title="Онлайн"></span> Онлайн'
-            : '<span class="status-dot off" title="Оффлайн"></span> Оффлайн';
-
-        return `
-            <div class="device-card" data-id="${d.id}">
-                <div class="device-title">${d.name}</div>
-                <div class="device-info">
-                    <div class="info-row">
-                        <span class="info-label">UID:</span>
-                        <span class="info-value">${d.device_uid || '—'}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Тариф:</span>
-                        <span class="info-value">${rub(d.price_per_minute)} ₽/мин</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Статус:</span>
-                        <span class="info-value">${onlineIndicator}</span>
-                    </div>
-                    <div class="info-row">
-                        <span class="info-label">Видимость:</span>
-                        <span>${statusPill}</span>
-                    </div>
-                </div>
-                <div class="card-actions">
-                    <a class="btn small" href="/local/devices/${d.id}">Редактировать</a>
-                    <a class="btn small neutral" href="/local/devices/${d.id}/qr" download>QR-код</a>
-                    <button class="btn small ${toggleClass}" data-act="toggle">${toggleLabel}</button>
-                    <button class="btn small danger" data-act="del">Удалить</button>
-                </div>
-            </div>`;
-    }
-
-    function bindActions(row) {
-        row.addEventListener('click', async (e) => {
-            const btn = e.target.closest('button');
-            if (!btn) return;
-
-            const id = row.dataset.id;
-            const act = btn.dataset.act;
-
-            if (act === 'toggle') {
-                const r = await api(`/local/api/devices/${id}/toggle`, { method: 'POST' });
-                if (r.ok) loadDevices();
-            }
-            if (act === 'del') {
-                if (!confirm('Удалить устройство?')) return;
-                const r = await api(`/local/api/devices/${id}`, { method: 'DELETE' });
-                if (r.ok) loadDevices();
-            }
-        });
-    }
-
-    async function loadDevices() {
-        try {
-            const r = await api('/local/api/devices');
-            const data = await r.json();
-
-            const listEl = $('#list');
-            const emptyEl = $('#empty-state');
-
-            if (data.length === 0) {
-                listEl.innerHTML = '';
-                emptyEl.classList.remove('hidden');
-                return;
-            }
-
-            emptyEl.classList.add('hidden');
-            listEl.innerHTML = '';
-
-            data.forEach(d => {
-                const wrapper = document.createElement('div');
-                wrapper.innerHTML = deviceCard(d);
-                const card = wrapper.firstElementChild;
-                bindActions(card);
-                listEl.appendChild(card);
-            });
-        } catch (e) {
-            console.error('Ошибка загрузки устройств:', e);
-        }
-    }
-
-    loadDevices();
-</script>
+{% extends "local/layout.html" %}
+{% set header_title = 'Мои устройства' %}
+{% block title %}Мои устройства{% endblock %}
+{% block local_content %}
+<div class="toolbar">
+    <a class="btn neutral small" href="{{ url_for('local_admin.dashboard') }}">← Назад</a>
+    <a class="btn small" href="{{ url_for('local_admin.devices_new_page') }}">+ Добавить устройство</a>
+</div>
+
+<h2 class="section-title">Устройства</h2>
+<div id="list" class="grid"></div>
+<div id="empty-state" class="message-box hidden" style="text-align: center; color: var(--muted);">
+    Нет устройств. Добавьте первое устройство!
+</div>
+
+<script>
+    const $ = s => document.querySelector(s);
+    const api = (u, opt = {}) => fetch(u, { headers: { 'Content-Type': 'application/json' }, ...opt });
+    const rub = v => (v / 100).toLocaleString('ru-RU', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+    function deviceCard(d) {
+        const statusPill = d.is_active
+            ? '<span class="pill on">Видно сотруднику</span>'
+            : '<span class="pill off">Скрыто от сотрудника</span>';
+        const toggleLabel = d.is_active ? 'Скрыть' : 'Показать';
+        const toggleClass = d.is_active ? 'neutral' : '';
+
+        const onlineIndicator = d.online
+            ? '<span class="status-dot on" title="Онлайн"></span> Онлайн'
+            : '<span class="status-dot off" title="Оффлайн"></span> Оффлайн';
+
+        return `
+            <div class="device-card" data-id="${d.id}">
+                <div class="device-title">${d.name}</div>
+                <div class="device-info">
+                    <div class="info-row">
+                        <span class="info-label">UID:</span>
+                        <span class="info-value">${d.device_uid || '—'}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Тариф:</span>
+                        <span class="info-value">${rub(d.price_per_minute)} ₽/мин</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Статус:</span>
+                        <span class="info-value">${onlineIndicator}</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Видимость:</span>
+                        <span>${statusPill}</span>
+                    </div>
+                </div>
+                <div class="card-actions">
+                    <a class="btn small" href="/local/devices/${d.id}">Редактировать</a>
+                    <a class="btn small neutral" href="/local/devices/${d.id}/qr" download>QR-код</a>
+                    <button class="btn small ${toggleClass}" data-act="toggle">${toggleLabel}</button>
+                    <button class="btn small danger" data-act="del">Удалить</button>
+                </div>
+            </div>`;
+    }
+
+    function bindActions(row) {
+        row.addEventListener('click', async (e) => {
+            const btn = e.target.closest('button');
+            if (!btn) return;
+
+            const id = row.dataset.id;
+            const act = btn.dataset.act;
+
+            if (act === 'toggle') {
+                const r = await api(`/local/api/devices/${id}/toggle`, { method: 'POST' });
+                if (r.ok) loadDevices();
+            }
+            if (act === 'del') {
+                if (!confirm('Удалить устройство?')) return;
+                const r = await api(`/local/api/devices/${id}`, { method: 'DELETE' });
+                if (r.ok) loadDevices();
+            }
+        });
+    }
+
+    async function loadDevices() {
+        try {
+            const r = await api('/local/api/devices');
+            const data = await r.json();
+
+            const listEl = $('#list');
+            const emptyEl = $('#empty-state');
+
+            if (data.length === 0) {
+                listEl.innerHTML = '';
+                emptyEl.classList.remove('hidden');
+                return;
+            }
+
+            emptyEl.classList.add('hidden');
+            listEl.innerHTML = '';
+
+            data.forEach(d => {
+                const wrapper = document.createElement('div');
+                wrapper.innerHTML = deviceCard(d);
+                const card = wrapper.firstElementChild;
+                bindActions(card);
+                listEl.appendChild(card);
+            });
+        } catch (e) {
+            console.error('Ошибка загрузки устройств:', e);
+        }
+    }
+
+    loadDevices();
+</script>
 {% endblock %}

@@ -1,98 +1,98 @@
-{% extends "local/layout.html" %}
-{% set header_title = 'Добавить работника' %}
-{% block title %}Добавить работника{% endblock %}
-{% block local_content %}
-<div class="toolbar">
-    <a class="btn neutral small" href="{{ url_for('local_admin.workers_page') }}">← Назад</a>
-</div>
-
-<h2 class="section-title">Добавить работника</h2>
-
-<div id="alert" class="message-box hidden"></div>
-
-<form id="worker-form">
-    <div class="field">
-        <label class="field__label" for="email">Email (логин)</label>
-        <input class="field__input" id="email" type="email" placeholder="worker@example.com" required>
-    </div>
-
-    <div class="field">
-        <label class="field__label" for="password">Пароль</label>
-        <input class="field__input" id="password" type="text" placeholder="Придумайте пароль" required>
-        <div style="font-size: 13px; color: var(--muted); margin-top: 4px;">
-            Пароль будет сохранен и отображен в списке работников
-        </div>
-    </div>
-
-    <div class="toolbar" style="justify-content: flex-end; margin-top: 20px;">
-        <button class="btn neutral" type="button" id="cancel">Отмена</button>
-        <button class="btn" type="submit" id="save">Создать</button>
-    </div>
-</form>
-
-<script>
-    const $ = s => document.querySelector(s);
-    const api = (u, opt = {}) => fetch(u, { headers: { 'Content-Type': 'application/json' }, ...opt });
-
-    $('#cancel').addEventListener('click', () => {
-        window.location.href = '/local/workers';
-    });
-
-    function showAlert(msg, type = 'success') {
-        const alert = $('#alert');
-        alert.textContent = msg;
-        alert.className = `message-box ${type}`;
-        alert.classList.remove('hidden');
-        setTimeout(() => alert.classList.add('hidden'), 5000);
-    }
-
-    $('#worker-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        const email = $('#email').value.trim();
-        const password = $('#password').value.trim();
-
-        if (!email || !password) {
-            showAlert('Заполните все поля', 'error');
-            return;
-        }
-
-        if (password.length < 4) {
-            showAlert('Пароль должен быть минимум 4 символа', 'error');
-            return;
-        }
-
-        const saveBtn = $('#save');
-        saveBtn.disabled = true;
-        saveBtn.textContent = 'Создание...';
-
-        try {
-            const r = await api('/local/api/workers', {
-                method: 'POST',
-                body: JSON.stringify({ email, password })
-            });
-
-            const data = await r.json();
-
-            if (!r.ok) {
-                const errorMsg = data.error === 'exists'
-                    ? 'Пользователь с таким email уже существует'
-                    : 'Ошибка создания работника';
-                showAlert(errorMsg, 'error');
-                saveBtn.disabled = false;
-                saveBtn.textContent = 'Создать';
-                return;
-            }
-
-            showAlert('Работник создан успешно!', 'success');
-            setTimeout(() => {
-                window.location.href = '/local/workers';
-            }, 1000);
-        } catch (e) {
-            showAlert('Ошибка сети', 'error');
-            saveBtn.disabled = false;
-            saveBtn.textContent = 'Создать';
-        }
-    });
-</script>
+{% extends "local/layout.html" %}
+{% set header_title = 'Добавить сотрудника' %}
+{% block title %}Добавить сотрудника{% endblock %}
+{% block local_content %}
+<div class="toolbar">
+    <a class="btn neutral small" href="{{ url_for('local_admin.workers_page') }}">← Назад</a>
+</div>
+
+<h2 class="section-title">Добавить сотрудника</h2>
+
+<div id="alert" class="message-box hidden"></div>
+
+<form id="worker-form">
+    <div class="field">
+        <label class="field__label" for="email">Email (логин)</label>
+        <input class="field__input" id="email" type="email" placeholder="worker@example.com" required>
+    </div>
+
+    <div class="field">
+        <label class="field__label" for="password">Пароль</label>
+        <input class="field__input" id="password" type="text" placeholder="Придумайте пароль" required>
+        <div style="font-size: 13px; color: var(--muted); margin-top: 4px;">
+            Пароль будет сохранен и отображен в списке сотрудников
+        </div>
+    </div>
+
+    <div class="toolbar" style="justify-content: flex-end; margin-top: 20px;">
+        <button class="btn neutral" type="button" id="cancel">Отмена</button>
+        <button class="btn" type="submit" id="save">Создать</button>
+    </div>
+</form>
+
+<script>
+    const $ = s => document.querySelector(s);
+    const api = (u, opt = {}) => fetch(u, { headers: { 'Content-Type': 'application/json' }, ...opt });
+
+    $('#cancel').addEventListener('click', () => {
+        window.location.href = '/local/workers';
+    });
+
+    function showAlert(msg, type = 'success') {
+        const alert = $('#alert');
+        alert.textContent = msg;
+        alert.className = `message-box ${type}`;
+        alert.classList.remove('hidden');
+        setTimeout(() => alert.classList.add('hidden'), 5000);
+    }
+
+    $('#worker-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const email = $('#email').value.trim();
+        const password = $('#password').value.trim();
+
+        if (!email || !password) {
+            showAlert('Заполните все поля', 'error');
+            return;
+        }
+
+        if (password.length < 4) {
+            showAlert('Пароль должен быть минимум 4 символа', 'error');
+            return;
+        }
+
+        const saveBtn = $('#save');
+        saveBtn.disabled = true;
+        saveBtn.textContent = 'Создание...';
+
+        try {
+            const r = await api('/local/api/workers', {
+                method: 'POST',
+                body: JSON.stringify({ email, password })
+            });
+
+            const data = await r.json();
+
+            if (!r.ok) {
+                const errorMsg = data.error === 'exists'
+                    ? 'Пользователь с таким email уже существует'
+                    : 'Ошибка создания сотрудника';
+                showAlert(errorMsg, 'error');
+                saveBtn.disabled = false;
+                saveBtn.textContent = 'Создать';
+                return;
+            }
+
+            showAlert('Сотрудник создан успешно!', 'success');
+            setTimeout(() => {
+                window.location.href = '/local/workers';
+            }, 1000);
+        } catch (e) {
+            showAlert('Ошибка сети', 'error');
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Создать';
+        }
+    });
+</script>
 {% endblock %}

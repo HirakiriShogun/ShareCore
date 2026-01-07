@@ -1,34 +1,34 @@
-{% extends "local/layout.html" %}
-{% block title %}Панель владельца{% endblock %}
-{% block local_content %}
-{% if is_sudo %}
-<div class="toolbar">
-  <button class="btn neutral small" id="unsudo">← Вернуться</button>
-</div>
-{% endif %}
-
-<div class="grid cols-2" style="align-items:start;">
-  <section class="local-card" style="padding: 20px;">
-    <h3 class="section-title" style="font-size:16px;">Устройства</h3>
-    <div class="grid">
-      <a class="btn small" href="{{ url_for('local_admin.devices_page') }}">Список</a>
-    </div>
-  </section>
-
-  <section class="local-card" style="padding: 20px;">
-    <h3 class="section-title" style="font-size:16px;">Работники</h3>
-    <div class="grid">
-      <a class="btn small" href="{{ url_for('local_admin.workers_page') }}">Список</a>
-    </div>
-  </section>
-
-  <section class="local-card" style="padding: 20px;">
-    <h3 class="section-title" style="font-size:16px;">Мониторинг</h3>
-    <div class="grid">
-      <a class="btn small" href="{{ url_for('local_admin.worker_page') }}">Панель работника</a>
-    </div>
-  </section>
-
+{% extends "local/layout.html" %}
+{% block title %}Панель владельца{% endblock %}
+{% block local_content %}
+{% if is_sudo %}
+<div class="toolbar">
+  <button class="btn neutral small" id="unsudo">← Вернуться</button>
+</div>
+{% endif %}
+
+<div class="grid cols-2" style="align-items:start;">
+  <section class="local-card" style="padding: 20px;">
+    <h3 class="section-title" style="font-size:16px;">Устройства</h3>
+    <div class="grid">
+      <a class="btn small" href="{{ url_for('local_admin.devices_page') }}">Список</a>
+    </div>
+  </section>
+
+  <section class="local-card" style="padding: 20px;">
+    <h3 class="section-title" style="font-size:16px;">Сотрудники</h3>
+    <div class="grid">
+      <a class="btn small" href="{{ url_for('local_admin.workers_page') }}">Список</a>
+    </div>
+  </section>
+
+  <section class="local-card" style="padding: 20px;">
+    <h3 class="section-title" style="font-size:16px;">Мониторинг</h3>
+    <div class="grid">
+      <a class="btn small" href="{{ url_for('local_admin.worker_page') }}">Панель сотрудника</a>
+    </div>
+  </section>
+
   <section class="local-card" style="padding: 20px;">
     <h3 class="section-title" style="font-size:16px;">Аналитика</h3>
     <div class="grid">
@@ -48,21 +48,21 @@
     <div class="grid">
       <a class="btn small danger" href="{{ url_for('public.logout') }}">Выйти</a>
     </div>
-  </section>
-</div>
-
-<script>
-  const unsudoBtn = document.getElementById('unsudo');
-  if (unsudoBtn) {
-    unsudoBtn.addEventListener('click', async () => {
-      try {
-        const r = await fetch('/admin/unsudo', { method: 'POST' });
-        const d = await r.json().catch(() => ({}));
-        window.location.href = d.redirect || '/admin/';
-      } catch (e) {
-        console.error(e);
-      }
-    });
-  }
-</script>
+  </section>
+</div>
+
+<script>
+  const unsudoBtn = document.getElementById('unsudo');
+  if (unsudoBtn) {
+    unsudoBtn.addEventListener('click', async () => {
+      try {
+        const r = await fetch('/admin/unsudo', { method: 'POST' });
+        const d = await r.json().catch(() => ({}));
+        window.location.href = d.redirect || '/admin/';
+      } catch (e) {
+        console.error(e);
+      }
+    });
+  }
+</script>
 {% endblock %}
