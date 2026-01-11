@@ -103,6 +103,8 @@ def normalize_status(data: Dict[str, Any]) -> Tuple[str, Optional[int]]:
     """Return (status_str, status_code) based on gateway payload."""
 
     raw = data.get("orderStatus")
+    if raw is None:
+        raw = data.get("OrderStatus")
     try:
         code = int(raw)
     except (TypeError, ValueError):
@@ -152,10 +154,14 @@ def _call_gateway(endpoint: str, payload: Dict[str, Any]) -> Dict[str, Any]:
     except ValueError as exc:
         raise AlfaBankError("Gateway returned non-JSON response") from exc
 
-    error_code = str(body.get("errorCode", "0"))
+    error_code = body.get("errorCode")
+    if error_code is None:
+        error_code = body.get("ErrorCode")
+    error_code = str(error_code if error_code is not None else "0")
     if error_code not in ("0", "00", ""):  # non-zero is error
         message = (
             body.get("errorMessage")
+            or body.get("ErrorMessage")
             or body.get("errorDescription")
             or body.get("actionCodeDescription")
             or f"Gateway error {error_code}"
