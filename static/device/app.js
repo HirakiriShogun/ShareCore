@@ -55,7 +55,7 @@
             return;
         }
         const sum = priceKopecks * selectedMinutes;
-        totalAmount.textContent = `${formatRub(sum)} ?`;
+        totalAmount.textContent = `${formatRub(sum)} ₽`;
     }
 
     function updateChipSelection() {

@@ -562,9 +562,9 @@ def _handle_payment_create(payload):
 
 @bp.route("/api/payment/create", methods=["POST"])
 def api_create_payment():
-    if not _is_control_user():
-        return jsonify({"error": "forbidden"}), 403
     payload = request.get_json(force=True) or {}
+    if not _is_control_user() and not payload.get("device_uid"):
+        return jsonify({"error": "forbidden"}), 403
     return _handle_payment_create(payload)
 
 
