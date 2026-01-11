@@ -9,7 +9,7 @@ import requests
 from flask import current_app
 
 
-SUCCESS_STATUSES = {2}
+SUCCESS_STATUSES = {1, 2}
 FAIL_STATUSES = {3, 4, 6, 7, 9, 10, 11}
 
 
@@ -93,7 +93,10 @@ def fetch_order_status(
     if order_number:
         payload["orderNumber"] = order_number
 
-    return _call_gateway("getOrderStatusExtended.do", payload)
+    try:
+        return _call_gateway("getOrderStatusExtended.do", payload)
+    except AlfaBankError:
+        return _call_gateway("getOrderStatus.do", payload)
 
 
 def normalize_status(data: Dict[str, Any]) -> Tuple[str, Optional[int]]:
