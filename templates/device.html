@@ -40,6 +40,13 @@
                         placeholder="name@example.com" autocomplete="email" required>
                 </label>
 
+                <div class="section-label">Длительность</div>
+                <div id="time-chips" class="time-chips" role="listbox" aria-label="Длительность аренды"></div>
+                <div class="total-section">
+                    <div class="total-label">Итого</div>
+                    <div class="total-amount" id="total-amount">-</div>
+                </div>
+
                 <div class="agreement-section">
                     <label class="agreement-label">
                         <input type="checkbox" id="agreement-checkbox-1" class="agreement-checkbox">
@@ -64,7 +71,7 @@
                 </div>
 
                 <button id="pay" class="btn-pay" type="button">
-                    <span>Согласиться</span>
+                    <span>Оплатить</span>
                 </button>
                 <div id="msg" class="message-box hidden" role="alert"></div>
             </div>

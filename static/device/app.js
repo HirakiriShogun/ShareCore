@@ -1,6 +1,6 @@
 (function () {
     const uid = document.querySelector('[data-device-uid]').dataset.deviceUid;
-    const priceKopecks = parseInt(document.querySelector('[data-device-price]').dataset.devicePrice, 10);
+    let priceKopecks = parseInt(document.querySelector('[data-device-price]').dataset.devicePrice, 10);
 
     const ppmRubEl = document.getElementById('ppm-rub');
     const busyBanner = document.getElementById('busy-banner');
@@ -8,18 +8,99 @@
     const remainSS = document.getElementById('remain-ss');
     const msgBox = document.getElementById('msg');
     const payBtn = document.getElementById('pay');
+    const payText = payBtn ? payBtn.querySelector('span') : null;
     const controls = document.getElementById('controls');
     const agreementCheckbox1 = document.getElementById('agreement-checkbox-1');
     const agreementCheckbox2 = document.getElementById('agreement-checkbox-2');
     const emailInput = document.getElementById('client-email');
+    const timeChips = document.getElementById('time-chips');
+    const totalAmount = document.getElementById('total-amount');
 
-    if (ppmRubEl) {
-        ppmRubEl.textContent = (priceKopecks / 100).toFixed(2);
-    }
+    const formatRub = (kopecks) => (kopecks / 100).toLocaleString('ru-RU', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
 
+    const defaultMinutes = [5, 10, 15, 30, 60];
     let remaining = 0;
     let online = true;
-    let consentSent = false;
+    let isSubmitting = false;
+    let selectedMinutes = 0;
+    let minutesKey = '';
+
+    function setPrice(value) {
+        if (ppmRubEl) {
+            ppmRubEl.textContent = formatRub(value);
+        }
+    }
+
+    function normalizeMinutes(list) {
+        const src = Array.isArray(list) && list.length ? list : defaultMinutes;
+        const unique = [];
+        src.forEach((value) => {
+            const parsed = parseInt(value, 10);
+            if (Number.isFinite(parsed) && parsed > 0 && !unique.includes(parsed)) {
+                unique.push(parsed);
+            }
+        });
+        return unique;
+    }
+
+    function updateTotal() {
+        if (!totalAmount) {
+            return;
+        }
+        if (!selectedMinutes) {
+            totalAmount.textContent = '-';
+            return;
+        }
+        const sum = priceKopecks * selectedMinutes;
+        totalAmount.textContent = `${formatRub(sum)} ?`;
+    }
+
+    function updateChipSelection() {
+        if (!timeChips) {
+            return;
+        }
+        timeChips.querySelectorAll('.time-chip').forEach((btn) => {
+            const minutes = parseInt(btn.dataset.minutes || '0', 10);
+            btn.classList.toggle('active', minutes === selectedMinutes);
+        });
+    }
+
+    function selectMinutes(value) {
+        selectedMinutes = value;
+        updateChipSelection();
+        updateTotal();
+        updateButtonState();
+    }
+
+    function setMinutesOptions(list) {
+        const normalized = normalizeMinutes(list);
+        const key = normalized.join(',');
+        if (key === minutesKey && (!timeChips || timeChips.children.length)) {
+            return;
+        }
+        minutesKey = key;
+        if (timeChips) {
+            timeChips.innerHTML = '';
+            normalized.forEach((minutes) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'time-chip';
+                btn.dataset.minutes = String(minutes);
+                btn.textContent = `${minutes} мин`;
+                btn.addEventListener('click', () => selectMinutes(minutes));
+                timeChips.appendChild(btn);
+            });
+        }
+        if (!normalized.includes(selectedMinutes)) {
+            selectedMinutes = normalized.includes(10) ? 10 : (normalized[0] || 0);
+        }
+        updateChipSelection();
+        updateTotal();
+        updateButtonState();
+    }
 
     function renderRemain() {
         const m = Math.floor(remaining / 60);
@@ -40,7 +121,8 @@
         const emailValue = (emailInput && emailInput.value || '').trim();
         const emailOk = emailValue.length > 0 && emailValue.includes('@');
 
-        payBtn.disabled = busy || !online || !agreement1Accepted || !agreement2Accepted || !emailOk || consentSent;
+        const hasMinutes = selectedMinutes > 0;
+        payBtn.disabled = busy || !online || !agreement1Accepted || !agreement2Accepted || !emailOk || !hasMinutes || isSubmitting;
     }
 
     if (agreementCheckbox1) {
@@ -52,6 +134,10 @@
     if (emailInput) {
         emailInput.addEventListener('input', updateButtonState);
     }
+
+    setPrice(priceKopecks);
+    setMinutesOptions(defaultMinutes);
+    updateTotal();
 
     setInterval(() => {
         if (remaining > 0) {
@@ -80,6 +166,13 @@
                 controls.classList.remove('hidden');
             }
 
+            if (typeof d.price_per_minute === 'number') {
+                priceKopecks = d.price_per_minute;
+                setPrice(priceKopecks);
+                updateTotal();
+            }
+            setMinutesOptions(d.allowed_minutes);
+
             remaining = d.remaining_seconds || 0;
             renderRemain();
         } catch (_e) {
@@ -102,6 +195,12 @@
             return;
         }
 
+        if (!selectedMinutes) {
+            msgBox.className = 'message-box error';
+            msgBox.textContent = 'Выберите длительность аренды.';
+            return;
+        }
+
         if (agreementCheckbox1 && !agreementCheckbox1.checked) {
             msgBox.className = 'message-box error';
             msgBox.textContent = 'Необходимо принять условия публичной оферты.';
@@ -114,18 +213,25 @@
             return;
         }
 
-        payBtn.disabled = true;
+        isSubmitting = true;
+        const oldText = payText ? payText.textContent : payBtn.textContent;
+        if (payText) {
+            payText.textContent = 'Перенаправляем...';
+        } else {
+            payBtn.textContent = 'Перенаправляем...';
+        }
+        updateButtonState();
 
         try {
-            const r = await fetch('/api/consent', {
+            const consentResponse = await fetch('/api/consent', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ device_uid: uid, email: emailValue, agreed: true })
             });
-            const data = await r.json().catch(() => ({}));
+            const consentData = await consentResponse.json().catch(() => ({}));
 
-            if (!r.ok) {
-                if (data && data.error === 'consent_required') {
+            if (!consentResponse.ok) {
+                if (consentData && consentData.error === 'consent_required') {
                     msgBox.className = 'message-box error';
                     msgBox.textContent = 'Согласие обязательно.';
                 } else {
@@ -135,13 +241,53 @@
                 return;
             }
 
-            consentSent = true;
-            msgBox.className = 'message-box success';
-            msgBox.textContent = 'Согласие зафиксировано. Ожидайте включения устройства.';
+            const paymentResponse = await fetch('/api/payment/public/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ device_uid: uid, minutes: selectedMinutes })
+            });
+            const paymentData = await paymentResponse.json().catch(() => ({}));
+
+            if (!paymentResponse.ok) {
+                if (paymentData.error === 'acquiring_disabled') {
+                    msgBox.className = 'message-box error';
+                    msgBox.textContent = paymentData.message || 'Онлайн-оплата временно недоступна.';
+                } else if (paymentData.error === 'minutes_not_allowed') {
+                    msgBox.className = 'message-box error';
+                    msgBox.textContent = 'Выбранная длительность недоступна.';
+                } else if (paymentData.error === 'busy') {
+                    msgBox.className = 'message-box error';
+                    msgBox.textContent = 'Устройство занято, попробуйте позже.';
+                } else if (paymentData.error === 'device_unavailable') {
+                    msgBox.className = 'message-box error';
+                    msgBox.textContent = 'Устройство недоступно.';
+                } else if (paymentData.error === 'payment_creation_failed') {
+                    msgBox.className = 'message-box error';
+                    msgBox.textContent = paymentData.message || 'Не удалось создать оплату.';
+                } else {
+                    msgBox.className = 'message-box error';
+                    msgBox.textContent = 'Ошибка создания оплаты.';
+                }
+                return;
+            }
+
+            if (paymentData && paymentData.payment_url) {
+                window.location.href = paymentData.payment_url;
+                return;
+            }
+
+            msgBox.className = 'message-box error';
+            msgBox.textContent = 'Не удалось получить ссылку на оплату.';
         } catch (e) {
             msgBox.className = 'message-box error';
             msgBox.textContent = 'Сеть недоступна. Попробуйте позже.';
         } finally {
+            isSubmitting = false;
+            if (payText) {
+                payText.textContent = oldText;
+            } else {
+                payBtn.textContent = oldText;
+            }
             updateButtonState();
         }
     });
