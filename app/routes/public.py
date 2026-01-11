@@ -1,4 +1,5 @@
 from datetime import datetime
+import json
 from typing import Optional
 
 
@@ -36,13 +37,6 @@ def _is_control_user() -> bool:
 
 
 def _refresh_order_state(order: Order, *, device: Optional[Device] = None):
-
-    if not order.payment_id:
-
-        return None
-
-
-
     try:
 
         payload = alfa_bank.fetch_order_status(order_id=order.payment_id, order_number=str(order.id))
@@ -89,7 +83,7 @@ def _refresh_order_state(order: Order, *, device: Optional[Device] = None):
 
 
 
-def _render_successful_payment(order: Order):
+def _render_successful_payment(order: Order, debug_payload: Optional[str] = None):
 
     device = Device.query.filter_by(device_uid=order.device_id).first()
 
@@ -110,6 +104,7 @@ def _render_successful_payment(order: Order):
                 message=f"Оплата прошла успешно! Устройство работает ещё {minutes_left} мин.",
 
                 device_uid=order.device_id,
+                debug_payload=debug_payload,
 
             )
 
@@ -124,6 +119,7 @@ def _render_successful_payment(order: Order):
         message=f"Оплата прошла успешно! Устройство запущено на {order.minutes} мин.",
 
         device_uid=order.device_id,
+        debug_payload=debug_payload,
 
     )
 
@@ -593,6 +589,12 @@ def payment_success():
 
         return render_template("payment_result.html", success=False, message="Заказ не найден")
 
+    md_order = request.args.get("orderId") or request.args.get("mdOrder")
+
+    if md_order and (not order.payment_id or order.payment_id != md_order):
+
+        order.payment_id = md_order
+
 
 
     status_payload = None
@@ -603,11 +605,22 @@ def payment_success():
 
         db.session.commit()
 
+    debug_payload = json.dumps(
+        {
+            "order_id": order.id,
+            "payment_id": order.payment_id,
+            "gateway_status": status_payload[0] if status_payload else None,
+            "gateway_payload": status_payload[1] if status_payload else None,
+        },
+        ensure_ascii=False,
+        indent=2,
+    )
+
 
 
     if order.payment_status == "succeeded":
 
-        return _render_successful_payment(order)
+        return _render_successful_payment(order, debug_payload=debug_payload)
 
 
 
@@ -619,7 +632,7 @@ def payment_success():
 
             message = status_payload[1]["actionCodeDescription"]
 
-        return render_template("payment_result.html", success=False, message=message)
+        return render_template("payment_result.html", success=False, message=message, debug_payload=debug_payload)
 
 
 
@@ -629,7 +642,7 @@ def payment_success():
 
         message = status_payload[1]["actionCodeDescription"]
 
-    return render_template("payment_result.html", success=False, message=message)
+    return render_template("payment_result.html", success=False, message=message, debug_payload=debug_payload)
 
 
 
@@ -653,6 +666,12 @@ def payment_fail():
 
         return render_template("payment_result.html", success=False, message="Оплата не найдена")
 
+    md_order = request.args.get("orderId") or request.args.get("mdOrder")
+
+    if md_order and (not order.payment_id or order.payment_id != md_order):
+
+        order.payment_id = md_order
+
 
 
     status_payload = None
@@ -663,11 +682,22 @@ def payment_fail():
 
         db.session.commit()
 
+    debug_payload = json.dumps(
+        {
+            "order_id": order.id,
+            "payment_id": order.payment_id,
+            "gateway_status": status_payload[0] if status_payload else None,
+            "gateway_payload": status_payload[1] if status_payload else None,
+        },
+        ensure_ascii=False,
+        indent=2,
+    )
+
 
 
     if order.payment_status == "succeeded":
 
-        return _render_successful_payment(order)
+        return _render_successful_payment(order, debug_payload=debug_payload)
 
 
 
@@ -677,7 +707,7 @@ def payment_fail():
 
         message = status_payload[1]["actionCodeDescription"]
 
-    return render_template("payment_result.html", success=False, message=message)
+    return render_template("payment_result.html", success=False, message=message, debug_payload=debug_payload)
 
 
 

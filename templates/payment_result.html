@@ -31,6 +31,12 @@
             </button>
             {% endif %}
         </div>
+        {% if debug_payload %}
+        <details class="debug-panel">
+            <summary>Отладка платежа</summary>
+            <pre>{{ debug_payload }}</pre>
+        </details>
+        {% endif %}
     </div>
 
     <section class="documents-panel" aria-label="Прикрепленные документы">
@@ -199,6 +205,33 @@
         border: 1px solid rgba(255, 255, 255, .05);
         padding: 24px;
         box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .02);
+    }
+
+    .debug-panel {
+        margin-top: 18px;
+        text-align: left;
+        background: rgba(15, 23, 42, .75);
+        border: 1px dashed rgba(148, 163, 184, .35);
+        border-radius: 14px;
+        padding: 12px 14px;
+        color: var(--muted);
+        font-size: 13px;
+    }
+
+    .debug-panel summary {
+        cursor: pointer;
+        font-weight: 600;
+        color: var(--text);
+    }
+
+    .debug-panel pre {
+        margin: 10px 0 0;
+        white-space: pre-wrap;
+        word-break: break-word;
+        font-family: "JetBrains Mono", "Fira Code", Consolas, monospace;
+        color: #dbeafe;
+        font-size: 12px;
+        line-height: 1.5;
     }
 
     .documents-label {
