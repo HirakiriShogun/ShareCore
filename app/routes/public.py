@@ -1,5 +1,4 @@
 from datetime import datetime
-import json
 from typing import Optional
 
 
@@ -83,7 +82,7 @@ def _refresh_order_state(order: Order, *, device: Optional[Device] = None):
 
 
 
-def _render_successful_payment(order: Order, debug_payload: Optional[str] = None):
+def _render_successful_payment(order: Order):
 
     device = Device.query.filter_by(device_uid=order.device_id).first()
 
@@ -104,7 +103,6 @@ def _render_successful_payment(order: Order, debug_payload: Optional[str] = None
                 message=f"Оплата прошла успешно! Устройство работает ещё {minutes_left} мин.",
 
                 device_uid=order.device_id,
-                debug_payload=debug_payload,
 
             )
 
@@ -119,7 +117,6 @@ def _render_successful_payment(order: Order, debug_payload: Optional[str] = None
         message=f"Оплата прошла успешно! Устройство запущено на {order.minutes} мин.",
 
         device_uid=order.device_id,
-        debug_payload=debug_payload,
 
     )
 
@@ -605,22 +602,9 @@ def payment_success():
 
         db.session.commit()
 
-    debug_payload = json.dumps(
-        {
-            "order_id": order.id,
-            "payment_id": order.payment_id,
-            "gateway_status": status_payload[0] if status_payload else None,
-            "gateway_payload": status_payload[1] if status_payload else None,
-        },
-        ensure_ascii=False,
-        indent=2,
-    )
-
-
-
     if order.payment_status == "succeeded":
 
-        return _render_successful_payment(order, debug_payload=debug_payload)
+        return _render_successful_payment(order)
 
 
 
@@ -632,7 +616,7 @@ def payment_success():
 
             message = status_payload[1]["actionCodeDescription"]
 
-        return render_template("payment_result.html", success=False, message=message, debug_payload=debug_payload)
+        return render_template("payment_result.html", success=False, message=message)
 
 
 
@@ -642,7 +626,7 @@ def payment_success():
 
         message = status_payload[1]["actionCodeDescription"]
 
-    return render_template("payment_result.html", success=False, message=message, debug_payload=debug_payload)
+    return render_template("payment_result.html", success=False, message=message)
 
 
 
@@ -682,22 +666,9 @@ def payment_fail():
 
         db.session.commit()
 
-    debug_payload = json.dumps(
-        {
-            "order_id": order.id,
-            "payment_id": order.payment_id,
-            "gateway_status": status_payload[0] if status_payload else None,
-            "gateway_payload": status_payload[1] if status_payload else None,
-        },
-        ensure_ascii=False,
-        indent=2,
-    )
-
-
-
     if order.payment_status == "succeeded":
 
-        return _render_successful_payment(order, debug_payload=debug_payload)
+        return _render_successful_payment(order)
 
 
 
@@ -707,7 +678,7 @@ def payment_fail():
 
         message = status_payload[1]["actionCodeDescription"]
 
-    return render_template("payment_result.html", success=False, message=message, debug_payload=debug_payload)
+    return render_template("payment_result.html", success=False, message=message)
 
 
 
