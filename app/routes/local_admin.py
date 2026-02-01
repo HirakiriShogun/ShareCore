@@ -188,6 +188,8 @@ def api_local_analytics_export():
     total_orders = 0
     total_minutes = 0
     total_amount_kop = 0
+    total_time_seconds = 0
+    total_time_count = 0
     for o in orders:
         created_at = o.created_at
         if created_at:
@@ -204,6 +206,9 @@ def api_local_analytics_export():
             total_minutes += int(o.minutes)
         if o.amount:
             total_amount_kop += int(o.amount)
+        if created_at:
+            total_time_seconds += local_dt.hour * 3600 + local_dt.minute * 60 + local_dt.second
+            total_time_count += 1
         
         ws.append([
             o.id,
@@ -217,14 +222,19 @@ def api_local_analytics_export():
         ])
 
     total_amount_rub = round(total_amount_kop / 100, 2)
+    if total_time_count:
+        avg_seconds = int(round(total_time_seconds / total_time_count))
+        avg_time_str = f"{avg_seconds // 3600:02d}:{(avg_seconds % 3600) // 60:02d}:{avg_seconds % 60:02d}"
+    else:
+        avg_time_str = "—"
     total_row = [
-        f"Итого ({total_orders} операций)",
+        "Итого",
+        f"Кол-во операций: {total_orders}",
+        f"Среднее время: {avg_time_str}",
+        f"{total_amount_rub:.2f} RUB",
         "",
         "",
-        total_amount_rub,
-        "",
-        "",
-        total_minutes,
+        f"{total_minutes} Минут",
         ""
     ]
     ws.append(total_row)
