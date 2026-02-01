@@ -187,7 +187,15 @@
 
     async function load() {
         try {
-            const r = await api('/local/api/analytics/summary');
+            const dateFrom = document.getElementById('export-date-from')?.value || '';
+            const dateTo = document.getElementById('export-date-to')?.value || '';
+            const tzOffset = document.getElementById('export-tz')?.value || currentTzOffset || '+00:00';
+            const params = new URLSearchParams();
+            if (dateFrom) params.append('date_from', dateFrom);
+            if (dateTo) params.append('date_to', dateTo);
+            if (tzOffset) params.append('tz_offset', tzOffset);
+            const url = `/local/api/analytics/summary${params.toString() ? `?${params.toString()}` : ''}`;
+            const r = await api(url);
             const d = await r.json();
 
             $('#k-orders').textContent = d.total_orders || 0;
@@ -277,6 +285,10 @@
     }
 
     const currentTzOffset = initTimezone();
+
+    document.getElementById('export-date-from')?.addEventListener('change', load);
+    document.getElementById('export-date-to')?.addEventListener('change', load);
+    document.getElementById('export-tz')?.addEventListener('change', load);
 
     // Обработка экспорта с фильтрами
     document.getElementById('btn-export')?.addEventListener('click', () => {

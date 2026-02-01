@@ -98,29 +98,48 @@ def api_analytics_summary():
         return forbid()
     from datetime import datetime, timedelta
     range_ = request.args.get("range", "month")
+    date_from = request.args.get("date_from")
+    date_to = request.args.get("date_to")
     now = datetime.utcnow()
-    since = None
-    if range_ == "day":
-        since = now - timedelta(days=1)
-    elif range_ == "week":
-        since = now - timedelta(days=7)
-    elif range_ == "month":
-        since = now - timedelta(days=30)
-
-    total_orders = db.session.query(db.func.count(Order.id)).scalar() or 0
-    if since:
-        total_amount = db.session.query(db.func.coalesce(db.func.sum(Order.amount), 0)).filter(Order.created_at >= since).scalar() or 0
-        total_minutes = db.session.query(db.func.coalesce(db.func.sum(Order.minutes), 0)).filter(Order.created_at >= since).scalar() or 0
+    start = None
+    end = None
+    if date_from or date_to:
+        if date_from:
+            try:
+                start = datetime.strptime(date_from, "%Y-%m-%d")
+            except ValueError:
+                start = None
+        if date_to:
+            try:
+                end = datetime.strptime(date_to, "%Y-%m-%d") + timedelta(days=1)
+            except ValueError:
+                end = None
     else:
-        total_amount = db.session.query(db.func.coalesce(db.func.sum(Order.amount), 0)).scalar() or 0
-        total_minutes = db.session.query(db.func.coalesce(db.func.sum(Order.minutes), 0)).scalar() or 0
+        if range_ == "day":
+            start = now - timedelta(days=1)
+        elif range_ == "week":
+            start = now - timedelta(days=7)
+        elif range_ == "month":
+            start = now - timedelta(days=30)
+
+    base_query = Order.query
+    if start:
+        base_query = base_query.filter(Order.created_at >= start)
+    if end:
+        base_query = base_query.filter(Order.created_at < end)
+
+    total_orders = base_query.with_entities(db.func.count(Order.id)).scalar() or 0
+    total_amount = base_query.with_entities(db.func.coalesce(db.func.sum(Order.amount), 0)).scalar() or 0
+    total_minutes = base_query.with_entities(db.func.coalesce(db.func.sum(Order.minutes), 0)).scalar() or 0
 
     devices = Device.query.order_by(Device.id.asc()).all()
     by_device = []
     for d in devices:
         base = db.session.query(Order).filter(Order.device_id == (d.device_uid or str(d.id)))
-        if since:
-            base = base.filter(Order.created_at >= since)
+        if start:
+            base = base.filter(Order.created_at >= start)
+        if end:
+            base = base.filter(Order.created_at < end)
         cnt = base.with_entities(db.func.count(Order.id)).scalar() or 0
         amt = base.with_entities(db.func.coalesce(db.func.sum(Order.amount), 0)).scalar() or 0
         # Конвертируем копейки в рубли (делим на 100)

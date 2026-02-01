@@ -101,17 +101,47 @@ def stats_page():
 def api_local_analytics_summary():
     if not is_local():
         abort(403)
+    tz_offset = request.args.get("tz_offset")
+    tz = parse_tz_offset(tz_offset)
+    date_from = request.args.get("date_from")
+    date_to = request.args.get("date_to")
+    start = None
+    end = None
+    if date_from:
+        try:
+            date_from_obj = datetime.strptime(date_from, "%Y-%m-%d").date()
+            start_local = datetime.combine(date_from_obj, datetime.min.time()).replace(tzinfo=tz)
+            start = start_local.astimezone(timezone.utc).replace(tzinfo=None)
+        except ValueError:
+            start = None
+    if date_to:
+        try:
+            date_to_obj = datetime.strptime(date_to, "%Y-%m-%d").date() + timedelta(days=1)
+            end_local = datetime.combine(date_to_obj, datetime.min.time()).replace(tzinfo=tz)
+            end = end_local.astimezone(timezone.utc).replace(tzinfo=None)
+        except ValueError:
+            end = None
     # only devices belonging to current local admin
     devs = Device.query.filter_by(owner_id=current_user.id).all()
     ids = [d.device_uid or str(d.id) for d in devs]
-    total_orders = db.session.query(db.func.count(Order.id)).filter(Order.device_id.in_(ids)).scalar() or 0
-    total_amount = db.session.query(db.func.coalesce(db.func.sum(Order.amount), 0)).filter(Order.device_id.in_(ids)).scalar() or 0
-    total_minutes = db.session.query(db.func.coalesce(db.func.sum(Order.minutes), 0)).filter(Order.device_id.in_(ids)).scalar() or 0
+    base_query = Order.query.filter(Order.device_id.in_(ids))
+    if start:
+        base_query = base_query.filter(Order.created_at >= start)
+    if end:
+        base_query = base_query.filter(Order.created_at < end)
+    total_orders = base_query.with_entities(db.func.count(Order.id)).scalar() or 0
+    total_amount = base_query.with_entities(db.func.coalesce(db.func.sum(Order.amount), 0)).scalar() or 0
+    total_minutes = base_query.with_entities(db.func.coalesce(db.func.sum(Order.minutes), 0)).scalar() or 0
     by_device = []
     for d in devs:
         did = d.device_uid or str(d.id)
-        cnt = db.session.query(db.func.count(Order.id)).filter(Order.device_id == did).scalar() or 0
-        amt = db.session.query(db.func.coalesce(db.func.sum(Order.amount), 0)).filter(Order.device_id == did).scalar() or 0
+        device_query = Order.query.filter(Order.device_id == did)
+        if start:
+            device_query = device_query.filter(Order.created_at >= start)
+        if end:
+            device_query = device_query.filter(Order.created_at < end)
+        cnt = device_query.with_entities(db.func.count(Order.id)).scalar() or 0
+        amt = device_query.with_entities(db.func.coalesce(db.func.sum(Order.amount), 0)).scalar() or 0
         # Конвертируем копейки в рубли
         by_device.append({"id": d.id, "name": d.name, "orders": int(cnt), "amount": round(amt / 100, 2)})
     return jsonify({

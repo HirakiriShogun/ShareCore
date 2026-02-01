@@ -46,7 +46,16 @@
 
     async function load() {
         const range = (document.getElementById('range')?.value) || 'month';
-        const r = await fetch(`/admin/api/analytics/summary?range=${encodeURIComponent(range)}`);
+        const dateFrom = document.getElementById('export-date-from')?.value || '';
+        const dateTo = document.getElementById('export-date-to')?.value || '';
+        const params = new URLSearchParams();
+        if (dateFrom) params.append('date_from', dateFrom);
+        if (dateTo) params.append('date_to', dateTo);
+        if (!dateFrom && !dateTo) {
+            params.append('range', range);
+        }
+        const query = params.toString();
+        const r = await fetch(`/admin/api/analytics/summary${query ? `?${query}` : ''}`);
         if (!r.ok) return;
         const d = await r.json();
         byDevice = d.by_device || [];
@@ -66,6 +75,8 @@
     });
 
     document.getElementById('range')?.addEventListener('change', load);
+    document.getElementById('export-date-from')?.addEventListener('change', load);
+    document.getElementById('export-date-to')?.addEventListener('change', load);
 
     // Обработка экспорта с фильтрами
     document.getElementById('btn-export')?.addEventListener('click', () => {
