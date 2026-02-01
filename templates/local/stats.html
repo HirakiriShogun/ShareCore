@@ -9,7 +9,7 @@
 <!-- Фильтры для экспорта Excel -->
 <div class="local-card" style="margin-bottom: 16px;">
     <h3 class="section-title" style="font-size: 16px; margin-bottom: 12px;">Экспорт в Excel</h3>
-    <div class="grid cols-3" style="margin-bottom: 12px;">
+    <div class="grid cols-4" style="margin-bottom: 12px;">
         <div class="field">
             <label class="field__label" for="export-date-from">Дата с</label>
             <input type="date" id="export-date-from" class="field__input" />
@@ -18,12 +18,44 @@
             <label class="field__label" for="export-date-to">Дата по</label>
             <input type="date" id="export-date-to" class="field__input" />
         </div>
+        <div class="field">
+            <label class="field__label" for="export-tz">Часовой пояс</label>
+            <select id="export-tz" class="field__select">
+                <option value="-12:00">UTC-12:00</option>
+                <option value="-11:00">UTC-11:00</option>
+                <option value="-10:00">UTC-10:00</option>
+                <option value="-09:00">UTC-09:00</option>
+                <option value="-08:00">UTC-08:00</option>
+                <option value="-07:00">UTC-07:00</option>
+                <option value="-06:00">UTC-06:00</option>
+                <option value="-05:00">UTC-05:00</option>
+                <option value="-04:00">UTC-04:00</option>
+                <option value="-03:00">UTC-03:00</option>
+                <option value="-02:00">UTC-02:00</option>
+                <option value="-01:00">UTC-01:00</option>
+                <option value="+00:00">UTC+00:00 (Гринвич)</option>
+                <option value="+01:00">UTC+01:00</option>
+                <option value="+02:00">UTC+02:00 (Калининград)</option>
+                <option value="+03:00">UTC+03:00 (Москва)</option>
+                <option value="+04:00">UTC+04:00 (Самара)</option>
+                <option value="+05:00">UTC+05:00 (Екатеринбург)</option>
+                <option value="+06:00">UTC+06:00 (Омск)</option>
+                <option value="+07:00">UTC+07:00 (Красноярск)</option>
+                <option value="+08:00">UTC+08:00 (Иркутск)</option>
+                <option value="+09:00">UTC+09:00 (Якутск)</option>
+                <option value="+10:00">UTC+10:00 (Владивосток)</option>
+                <option value="+11:00">UTC+11:00 (Магадан)</option>
+                <option value="+12:00">UTC+12:00 (Камчатка)</option>
+                <option value="+13:00">UTC+13:00</option>
+                <option value="+14:00">UTC+14:00</option>
+            </select>
+        </div>
         <div class="field" style="display: flex; align-items: flex-end;">
             <button class="btn" id="btn-export" style="width: 100%;">Скачать XLSX</button>
         </div>
     </div>
     <div style="color: var(--muted); font-size: 13px; margin-top: 8px;">
-        💡 Оставьте поля пустыми, чтобы экспортировать все данные. Если указана только дата "с", будут экспортированы все данные с этой даты по текущий момент.
+        💡 Оставьте поля пустыми, чтобы экспортировать все данные. Если указана только дата "с", будут экспортированы все данные с этой даты по текущий момент. Время и даты в файле учитывают выбранный часовой пояс.
     </div>
 </div>
 
@@ -177,16 +209,64 @@
 
     load();
     
+    const TZ_STORAGE_KEY = 'local_analytics_tz_offset';
+
+    function formatOffset(totalMinutes) {
+        const sign = totalMinutes >= 0 ? '+' : '-';
+        const abs = Math.abs(totalMinutes);
+        const hh = String(Math.floor(abs / 60)).padStart(2, '0');
+        const mm = String(abs % 60).padStart(2, '0');
+        return `${sign}${hh}:${mm}`;
+    }
+
+    function ensureTimezoneOption(value) {
+        const select = document.getElementById('export-tz');
+        if (!select || !value) return;
+        if (!select.querySelector(`option[value="${value}"]`)) {
+            const option = document.createElement('option');
+            option.value = value;
+            option.textContent = `UTC${value}`;
+            select.insertBefore(option, select.firstChild);
+        }
+    }
+
+    function initTimezone() {
+        const select = document.getElementById('export-tz');
+        if (!select) return '+00:00';
+        let stored = '';
+        try {
+            stored = localStorage.getItem(TZ_STORAGE_KEY) || '';
+        } catch (e) {
+            stored = '';
+        }
+        const browserOffset = formatOffset(-new Date().getTimezoneOffset());
+        const value = stored || browserOffset || '+00:00';
+        ensureTimezoneOption(value);
+        select.value = value;
+        select.addEventListener('change', () => {
+            try {
+                localStorage.setItem(TZ_STORAGE_KEY, select.value);
+            } catch (e) {
+                console.warn('Не удалось сохранить часовой пояс', e);
+            }
+        });
+        return select.value;
+    }
+
+    const currentTzOffset = initTimezone();
+
     // Обработка экспорта с фильтрами
     document.getElementById('btn-export')?.addEventListener('click', () => {
         const dateFrom = document.getElementById('export-date-from')?.value || '';
         const dateTo = document.getElementById('export-date-to')?.value || '';
+        const tzOffset = document.getElementById('export-tz')?.value || currentTzOffset || '+00:00';
         
         let url = '/local/api/analytics/export.xlsx';
         const params = new URLSearchParams();
         
         if (dateFrom) params.append('date_from', dateFrom);
         if (dateTo) params.append('date_to', dateTo);
+        if (tzOffset) params.append('tz_offset', tzOffset);
         
         if (params.toString()) {
             url += '?' + params.toString();

@@ -1,5 +1,6 @@
 # app/routes/local_admin.py
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+import re
 from flask import Blueprint, abort, render_template, request, jsonify, session, send_file, url_for, current_app
 from flask_login import login_required, current_user
 from app.db import db
@@ -17,6 +18,30 @@ def owner_id_for_user():
     if is_worker():
         return current_user.parent_id
     return None
+
+_TZ_OFFSET_RE = re.compile(r"^([+-])(\d{2})(?::?(\d{2}))?$")
+
+def parse_tz_offset(raw_value: str):
+    if not raw_value:
+        return timezone.utc
+    value = str(raw_value).strip().upper()
+    if value in ("UTC", "GMT", "Z", "+00:00", "+00", "0", "00:00", "-00:00", "-00"):
+        return timezone.utc
+    match = _TZ_OFFSET_RE.match(value)
+    if not match:
+        return timezone.utc
+    sign, hh, mm = match.groups()
+    try:
+        hours = int(hh)
+        minutes = int(mm or 0)
+    except ValueError:
+        return timezone.utc
+    if hours > 14 or minutes >= 60:
+        return timezone.utc
+    total = hours * 60 + minutes
+    if sign == "-":
+        total = -total
+    return timezone(timedelta(minutes=total))
 
 # -------- Pages --------
 @bp.route("/")
@@ -97,7 +122,6 @@ def api_local_analytics_export():
         abort(403)
     
     from io import BytesIO
-    from datetime import datetime, timedelta
     try:
         import openpyxl
         from openpyxl.styles import Font, PatternFill, Alignment
@@ -107,6 +131,8 @@ def api_local_analytics_export():
     # Получаем параметры фильтрации
     date_from = request.args.get("date_from")
     date_to = request.args.get("date_to")
+    tz_offset = request.args.get("tz_offset")
+    tz = parse_tz_offset(tz_offset)
     
     devs = Device.query.filter_by(owner_id=current_user.id).all()
     ids = [d.device_uid or str(d.id) for d in devs]
@@ -116,15 +142,19 @@ def api_local_analytics_export():
     
     if date_from:
         try:
-            date_from_obj = datetime.strptime(date_from, "%Y-%m-%d")
-            query = query.filter(Order.created_at >= date_from_obj)
+            date_from_obj = datetime.strptime(date_from, "%Y-%m-%d").date()
+            start_local = datetime.combine(date_from_obj, datetime.min.time()).replace(tzinfo=tz)
+            start_utc = start_local.astimezone(timezone.utc).replace(tzinfo=None)
+            query = query.filter(Order.created_at >= start_utc)
         except ValueError:
             pass
     
     if date_to:
         try:
-            date_to_obj = datetime.strptime(date_to, "%Y-%m-%d") + timedelta(days=1)
-            query = query.filter(Order.created_at < date_to_obj)
+            date_to_obj = datetime.strptime(date_to, "%Y-%m-%d").date() + timedelta(days=1)
+            end_local = datetime.combine(date_to_obj, datetime.min.time()).replace(tzinfo=tz)
+            end_utc = end_local.astimezone(timezone.utc).replace(tzinfo=None)
+            query = query.filter(Order.created_at < end_utc)
         except ValueError:
             pass
     
@@ -151,8 +181,13 @@ def api_local_analytics_export():
     # Заполняем данные
     for o in orders:
         created_at = o.created_at
-        date_str = created_at.strftime("%d.%m.%Y") if created_at else ""
-        time_str = created_at.strftime("%H:%M:%S") if created_at else ""
+        if created_at:
+            local_dt = created_at.replace(tzinfo=timezone.utc).astimezone(tz)
+            date_str = local_dt.strftime("%d.%m.%Y")
+            time_str = local_dt.strftime("%H:%M:%S")
+        else:
+            date_str = ""
+            time_str = ""
         amount_rub = round(o.amount / 100, 2) if o.amount else 0
         
         ws.append([
