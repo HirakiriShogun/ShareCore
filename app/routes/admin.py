@@ -110,8 +110,10 @@ def api_analytics_summary():
     total_orders = db.session.query(db.func.count(Order.id)).scalar() or 0
     if since:
         total_amount = db.session.query(db.func.coalesce(db.func.sum(Order.amount), 0)).filter(Order.created_at >= since).scalar() or 0
+        total_minutes = db.session.query(db.func.coalesce(db.func.sum(Order.minutes), 0)).filter(Order.created_at >= since).scalar() or 0
     else:
         total_amount = db.session.query(db.func.coalesce(db.func.sum(Order.amount), 0)).scalar() or 0
+        total_minutes = db.session.query(db.func.coalesce(db.func.sum(Order.minutes), 0)).scalar() or 0
 
     devices = Device.query.order_by(Device.id.asc()).all()
     by_device = []
@@ -126,6 +128,7 @@ def api_analytics_summary():
     return jsonify({
         "total_orders": int(total_orders),
         "total_amount": round(total_amount / 100, 2),  # Конвертируем копейки в рубли
+        "total_minutes": int(total_minutes or 0),
         "by_device": by_device,
     })
 
@@ -186,11 +189,20 @@ def api_analytics_export():
         cell.alignment = Alignment(horizontal="center", vertical="center")
     
     # Заполняем данные
+    total_orders = 0
+    total_minutes = 0
+    total_amount_kop = 0
     for o in orders:
         created_at = o.created_at
         date_str = created_at.strftime("%d.%m.%Y") if created_at else ""
         time_str = created_at.strftime("%H:%M:%S") if created_at else ""
         amount_rub = round(o.amount / 100, 2) if o.amount else 0
+
+        total_orders += 1
+        if o.minutes:
+            total_minutes += int(o.minutes)
+        if o.amount:
+            total_amount_kop += int(o.amount)
         
         ws.append([
             o.id,
@@ -202,6 +214,22 @@ def api_analytics_export():
             o.minutes or 0,
             o.payment_status or "unknown"
         ])
+
+    total_amount_rub = round(total_amount_kop / 100, 2)
+    total_row = [
+        f"Итого ({total_orders} операций)",
+        "",
+        "",
+        total_amount_rub,
+        "",
+        "",
+        total_minutes,
+        ""
+    ]
+    ws.append(total_row)
+    for cell in ws[ws.max_row]:
+        cell.font = Font(bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center")
     
     # Автоширина колонок
     for column in ws.columns:

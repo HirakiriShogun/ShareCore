@@ -789,6 +789,19 @@
     background: rgba(255, 255, 255, .01)
 }
 
+.t-body .t-row.total-row {
+    background: rgba(var(--accent-rgb), .10);
+    border-top: 1px solid rgba(153, 171, 208, .24);
+}
+
+.t-body .t-row.total-row .t-cell {
+    font-weight: 700;
+}
+
+.t-body .t-row.total-row .orders-text {
+    color: var(--text);
+}
+
 .amt {
     color: #86efac;
     font-variant-numeric: tabular-nums

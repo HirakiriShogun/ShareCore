@@ -106,6 +106,7 @@ def api_local_analytics_summary():
     ids = [d.device_uid or str(d.id) for d in devs]
     total_orders = db.session.query(db.func.count(Order.id)).filter(Order.device_id.in_(ids)).scalar() or 0
     total_amount = db.session.query(db.func.coalesce(db.func.sum(Order.amount), 0)).filter(Order.device_id.in_(ids)).scalar() or 0
+    total_minutes = db.session.query(db.func.coalesce(db.func.sum(Order.minutes), 0)).filter(Order.device_id.in_(ids)).scalar() or 0
     by_device = []
     for d in devs:
         did = d.device_uid or str(d.id)
@@ -113,7 +114,12 @@ def api_local_analytics_summary():
         amt = db.session.query(db.func.coalesce(db.func.sum(Order.amount), 0)).filter(Order.device_id == did).scalar() or 0
         # Конвертируем копейки в рубли
         by_device.append({"id": d.id, "name": d.name, "orders": int(cnt), "amount": round(amt / 100, 2)})
-    return jsonify({"total_orders": int(total_orders), "total_amount": round(total_amount / 100, 2), "by_device": by_device})
+    return jsonify({
+        "total_orders": int(total_orders),
+        "total_amount": round(total_amount / 100, 2),
+        "total_minutes": int(total_minutes or 0),
+        "by_device": by_device
+    })
 
 @bp.route("/api/analytics/export.xlsx", methods=["GET"])
 @login_required
@@ -179,6 +185,9 @@ def api_local_analytics_export():
         cell.alignment = Alignment(horizontal="center", vertical="center")
     
     # Заполняем данные
+    total_orders = 0
+    total_minutes = 0
+    total_amount_kop = 0
     for o in orders:
         created_at = o.created_at
         if created_at:
@@ -189,6 +198,12 @@ def api_local_analytics_export():
             date_str = ""
             time_str = ""
         amount_rub = round(o.amount / 100, 2) if o.amount else 0
+
+        total_orders += 1
+        if o.minutes:
+            total_minutes += int(o.minutes)
+        if o.amount:
+            total_amount_kop += int(o.amount)
         
         ws.append([
             o.id,
@@ -200,6 +215,22 @@ def api_local_analytics_export():
             o.minutes or 0,
             o.payment_status or "unknown"
         ])
+
+    total_amount_rub = round(total_amount_kop / 100, 2)
+    total_row = [
+        f"Итого ({total_orders} операций)",
+        "",
+        "",
+        total_amount_rub,
+        "",
+        "",
+        total_minutes,
+        ""
+    ]
+    ws.append(total_row)
+    for cell in ws[ws.max_row]:
+        cell.font = Font(bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center")
     
     # Автоширина колонок
     for column in ws.columns:

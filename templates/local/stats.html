@@ -146,6 +146,16 @@
         border: 1px solid rgba(153, 171, 208, .10);
     }
 
+    .stats-row.total {
+        background: linear-gradient(135deg, rgba(var(--accent-rgb), .12), rgba(16, 185, 129, .08));
+        border-color: rgba(var(--accent-rgb), .35);
+    }
+
+    .stats-row.total .stats-name,
+    .stats-row.total .stats-value {
+        font-weight: 800;
+    }
+
     .stats-name {
         font-weight: 600;
         color: var(--text);
@@ -202,6 +212,19 @@
                 `;
                 bydevEl.appendChild(row);
             });
+
+            const totalAmount = d.by_device.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+            const totalOrders = d.by_device.reduce((sum, item) => sum + (Number(item.orders) || 0), 0);
+            const totalMinutes = Number(d.total_minutes) || 0;
+            const minutesText = totalMinutes ? ` • ${totalMinutes} мин` : '';
+            const totalRow = document.createElement('div');
+            totalRow.className = 'stats-row total';
+            totalRow.innerHTML = `
+                <div class="stats-name">Итого</div>
+                <div class="stats-value amount">${rub(Math.round(totalAmount * 100) / 100)} ₽</div>
+                <div class="stats-value orders">${totalOrders} активаций${minutesText}</div>
+            `;
+            bydevEl.appendChild(totalRow);
         } catch (e) {
             console.error('Ошибка загрузки:', e);
         }

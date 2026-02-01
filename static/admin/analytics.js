@@ -4,6 +4,7 @@
     let sortKey = 'name';
     let sortDir = 'asc';
     let byDevice = [];
+    let totalMinutes = 0;
 
     function renderMetrics(d) {
         const eo = document.getElementById('k-orders'); if (eo) eo.textContent = d.total_orders;
@@ -27,6 +28,20 @@
       `;
             box.appendChild(row);
         });
+        if (data.length) {
+            const totalAmount = data.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+            const totalOrders = data.reduce((sum, item) => sum + (Number(item.orders) || 0), 0);
+            const minutesValue = Number(totalMinutes) || 0;
+            const minutesText = minutesValue ? ` • ${minutesValue} мин` : '';
+            const totalRow = document.createElement('div');
+            totalRow.className = 't-row total-row';
+            totalRow.innerHTML = `
+        <div class="t-cell"><b>Итого</b><div class="muted">по ${data.length} устройствам</div></div>
+        <div class="t-cell amt">${rub(Math.round(totalAmount * 100) / 100)}</div>
+        <div class="t-cell"><span class="orders-text">${totalOrders} активаций${minutesText}</span></div>
+      `;
+            box.appendChild(totalRow);
+        }
     }
 
     async function load() {
@@ -35,6 +50,7 @@
         if (!r.ok) return;
         const d = await r.json();
         byDevice = d.by_device || [];
+        totalMinutes = d.total_minutes || 0;
         renderMetrics(d);
         renderTable();
     }
