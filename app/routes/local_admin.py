@@ -124,7 +124,10 @@ def api_local_analytics_summary():
     # only devices belonging to current local admin
     devs = Device.query.filter_by(owner_id=current_user.id).all()
     ids = [d.device_uid or str(d.id) for d in devs]
-    base_query = Order.query.filter(Order.device_id.in_(ids))
+    base_query = Order.query.filter(
+        Order.device_id.in_(ids),
+        Order.payment_status == "succeeded"
+    )
     if start:
         base_query = base_query.filter(Order.created_at >= start)
     if end:
@@ -135,7 +138,10 @@ def api_local_analytics_summary():
     by_device = []
     for d in devs:
         did = d.device_uid or str(d.id)
-        device_query = Order.query.filter(Order.device_id == did)
+        device_query = Order.query.filter(
+            Order.device_id == did,
+            Order.payment_status == "succeeded"
+        )
         if start:
             device_query = device_query.filter(Order.created_at >= start)
         if end:
@@ -174,7 +180,10 @@ def api_local_analytics_export():
     ids = [d.device_uid or str(d.id) for d in devs]
     
     # Строим запрос
-    query = Order.query.filter(Order.device_id.in_(ids))
+    query = Order.query.filter(
+        Order.device_id.in_(ids),
+        Order.payment_status == "succeeded"
+    )
     
     if date_from:
         try:

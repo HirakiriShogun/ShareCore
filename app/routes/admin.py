@@ -122,7 +122,7 @@ def api_analytics_summary():
         elif range_ == "month":
             start = now - timedelta(days=30)
 
-    base_query = Order.query
+    base_query = Order.query.filter(Order.payment_status == "succeeded")
     if start:
         base_query = base_query.filter(Order.created_at >= start)
     if end:
@@ -135,7 +135,10 @@ def api_analytics_summary():
     devices = Device.query.order_by(Device.id.asc()).all()
     by_device = []
     for d in devices:
-        base = db.session.query(Order).filter(Order.device_id == (d.device_uid or str(d.id)))
+        base = db.session.query(Order).filter(
+            Order.device_id == (d.device_uid or str(d.id)),
+            Order.payment_status == "succeeded"
+        )
         if start:
             base = base.filter(Order.created_at >= start)
         if end:
@@ -170,7 +173,7 @@ def api_analytics_export():
     date_to = request.args.get("date_to")
     
     # Строим запрос
-    query = Order.query
+    query = Order.query.filter(Order.payment_status == "succeeded")
     
     if date_from:
         try:
